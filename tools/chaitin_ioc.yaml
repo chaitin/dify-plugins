@@ -1,0 +1,28 @@
+identity:
+  name: "chaitin_ioc"
+  author: "chaitin"
+  label:
+    en_US: "IP Threat Intelligence Query"
+    zh_Hans: "IP威胁情报查询"
+description:
+  human:
+    en_US: "Retrieve threat intelligence using an IP address"
+    zh_Hans: "通过IP地址查询威胁情报"
+  llm: "This plugin connects to Chaitin Baichuan Cloud Threat Intelligence Service (https://rivers.chaitin.cn). It supports querying the threat level of IP addresses, historical attack behaviors (such as web attacks, SQL injections, backdoor connections, etc.), as well as geographic location, ASN, and ISP information."
+parameters:
+  - name: ip_address
+    type: string
+    required: true
+    label:
+      en_US: IP address
+      zh_Hans: IP地址
+      pt_BR: IP address
+    human_description:
+      en_US: "ip address, like: `58.218.211.220`"
+      zh_Hans: "ip地址, like: `58.218.211.220`"
+      pt_BR: "ip address, like: `58.218.211.220`"
+    llm_description: "ip address, like: `58.218.211.220`"
+    form: llm
+extra:
+  python:
+    source: tools/chaitin_ioc.py
