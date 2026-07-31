@@ -11,7 +11,10 @@ from pathlib import Path
 
 import yaml
 
-from discover_plugins import discover
+try:
+    from .discover_plugins import discover
+except ImportError:  # Executed directly as a script.
+    from discover_plugins import discover
 
 EXPECTED = {"rivers_ioc", "agent_compose_workflow", "agent_compose_strategy", "octobus"}
 REQUIRED_FILES = (
@@ -24,6 +27,10 @@ REQUIRED_FILES = (
 )
 PRIVATE_HOST = re.compile(
     r"(?:git\.in\.chaitin\.net|portus\.in\.chaitin\.net|proxy\.in\.chaitin\.net)", re.I
+)
+PRIVATE_NETWORKS = tuple(
+    ipaddress.ip_network(network)
+    for network in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")  # private-reference: allow
 )
 
 
@@ -63,15 +70,18 @@ def scan_private_references(root: Path) -> list[str]:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        if PRIVATE_HOST.search(text):
-            errors.append(f"private hostname found in {path.relative_to(root)}")
-        for match in re.finditer(r"(?<![\d.])(?:10|127)\.(?:\d{1,3}\.){2}\d{1,3}(?![\d.])", text):
-            try:
-                address = ipaddress.ip_address(match.group())
-            except ValueError:
+        for line in text.splitlines():
+            if "private-reference: allow" in line:
                 continue
-            if address.is_private and address != ipaddress.ip_address("127.0.0.1"):
-                errors.append(f"private IP found in {path.relative_to(root)}")
+            if PRIVATE_HOST.search(line):
+                errors.append(f"private hostname found in {path.relative_to(root)}")
+            for match in re.finditer(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])", line):
+                try:
+                    address = ipaddress.ip_address(match.group())
+                except ValueError:
+                    continue
+                if any(address in network for network in PRIVATE_NETWORKS):
+                    errors.append(f"private IP found in {path.relative_to(root)}")
     return sorted(set(errors))
 
 

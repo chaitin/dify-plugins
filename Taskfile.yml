@@ -48,7 +48,8 @@ tasks:
   plugin:build:
     internal: true
     dir: plugins/{{.PLUGIN}}
-    cmds: [task build DIST_DIR=../../dist]
+    cmds:
+      - DIFY_PLUGIN_CLI="$(../../scripts/resolve-dify-plugin-cli.sh)" task build DIST_DIR=../../dist
   clean:
     cmds:
       - uv run python -c "import shutil; shutil.rmtree('dist', ignore_errors=True)"
