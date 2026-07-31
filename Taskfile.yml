@@ -44,6 +44,18 @@ tasks:
       - for: { var: PLUGINS }
         task: plugin:build
         vars: { PLUGIN: '{{.ITEM}}' }
+  release:
+    desc: Build every plugin with the repository release version
+    deps: [check]
+    requires:
+      vars: [VERSION]
+    cmds:
+      - mkdir -p dist
+      - >-
+        uv run python scripts/build_release.py
+        --version '{{.VERSION}}'
+        --cli "$(scripts/resolve-dify-plugin-cli.sh)"
+        --dist-dir dist
   check:
     desc: Run all required local quality gates
     deps: [lint, test, validate, license, security]

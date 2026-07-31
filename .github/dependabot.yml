@@ -11,19 +11,39 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /plugins/rivers_ioc
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      plugin-dependencies:
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /plugins/agent_compose_workflow
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      plugin-dependencies:
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /plugins/agent_compose_strategy
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      plugin-dependencies:
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /plugins/octobus
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      plugin-dependencies:
+        patterns: ['*']

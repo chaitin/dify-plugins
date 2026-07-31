@@ -42,8 +42,8 @@ CI integration, but does not redesign their behavior.
 4. Release packages are built with the official CLI distributed by
    `langgenius/dify-plugin-daemon`. The baseline CLI is 0.6.3, matching Dify
    1.15.0; a newer pinned CLI may be used as an additional compatibility gate.
-5. Plugin versions remain independent. A repository release is a release
-   train containing all current plugin packages and `SHA256SUMS`.
+5. Repository SemVer tags are the single release version. Packaging rewrites staged
+   manifest copies only; committed source manifests remain development baselines.
 6. The repository is Apache-2.0 and copyrighted by Chaitin. Imported assets
    and code must pass a provenance/license review before release.
 7. GitLab CI, internal registries, proxies, private hosts, generated packages,

@@ -15,6 +15,7 @@ versioned, self-contained plugin packages for Dify 1.15.0 and later.
 | OctoBus | Tool | Discover and invoke OctoBus capabilities | [Plugin README](plugins/octobus/README.md) |
 
 Download attested build artifacts and `SHA256SUMS` from [GitHub Releases](../../releases).
+Every package in a release embeds the repository's SemVer tag as its plugin version.
 Install a `.difypkg` through Dify's plugin management interface.
 
 ## Development
