@@ -60,3 +60,12 @@ jobs:
           name: ${{ matrix.plugin.name }}
           path: dist/${{ matrix.plugin.name }}-*.difypkg
           if-no-files-found: error
+  plugins:
+    if: ${{ always() }}
+    needs: plugin
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every plugin matrix job to pass
+        env:
+          RESULT: ${{ needs.plugin.result }}
+        run: test "${RESULT}" = success
