@@ -2,15 +2,15 @@
 name = "chaitin-dify-plugins-development"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["pyyaml>=6.0.2,<7"]
+dependencies = ["pyyaml>=6.0.3,<7"]
 
 [dependency-groups]
 dev = [
-  "bandit==1.8.6",
-  "pip-audit==2.9.0",
-  "pytest>=9.0.3,<10",
-  "reuse==5.0.2",
-  "ruff>=0.12,<0.13",
+  "bandit==1.9.4",
+  "pip-audit==2.10.1",
+  "pytest>=9.1.1,<10",
+  "reuse==6.2.0",
+  "ruff>=0.16.0,<0.17",
 ]
 
 [tool.ruff]
