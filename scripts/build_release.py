@@ -43,10 +43,10 @@ def validate_version(version: str) -> str:
 def write_release_manifest(source: Path, destination: Path, version: str) -> str:
     manifest = yaml.safe_load(source.read_text(encoding="utf-8"))
     if not isinstance(manifest, dict) or not isinstance(manifest.get("name"), str):
-        raise ValueError(f"invalid plugin manifest: {source}")
+        raise TypeError(f"invalid plugin manifest: {source}")
     meta = manifest.get("meta")
     if not isinstance(meta, dict):
-        raise ValueError(f"manifest meta must be a mapping: {source}")
+        raise TypeError(f"manifest meta must be a mapping: {source}")
     manifest["version"] = version
     meta["version"] = version
     if isinstance(manifest.get("created_at"), (date, datetime)):
@@ -64,7 +64,7 @@ def verify_package(package: Path, expected_name: str, expected_version: str) -> 
     with zipfile.ZipFile(package) as archive:
         manifest = yaml.safe_load(archive.read("manifest.yaml"))
     if not isinstance(manifest, dict):
-        raise RuntimeError(f"packaged manifest is invalid: {package}")
+        raise TypeError(f"packaged manifest is invalid: {package}")
     actual = (
         manifest.get("name"),
         manifest.get("version"),

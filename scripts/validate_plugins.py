@@ -26,7 +26,8 @@ REQUIRED_FILES = (
     "CHANGELOG.md",
 )
 PRIVATE_HOST = re.compile(
-    r"(?:git\.in\.chaitin\.net|portus\.in\.chaitin\.net|proxy\.in\.chaitin\.net)", re.I
+    r"(?:git\.in\.chaitin\.net|portus\.in\.chaitin\.net|proxy\.in\.chaitin\.net)",
+    re.IGNORECASE,
 )
 PRIVATE_NETWORKS = tuple(
     ipaddress.ip_network(network)

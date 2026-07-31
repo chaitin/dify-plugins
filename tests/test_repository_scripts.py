@@ -7,8 +7,8 @@ import yaml
 
 from scripts.build_release import build_release, validate_version
 from scripts.discover_plugins import discover
-from scripts.validate_runtime_requirements import dependency_lines
 from scripts.validate_plugins import scan_private_references
+from scripts.validate_runtime_requirements import dependency_lines
 
 
 def test_discover_returns_sorted_plugins(tmp_path: Path) -> None:
