@@ -4,6 +4,7 @@ dist/
 Taskfile.yml
 pyproject.toml
 uv.lock
+scripts/
 README.zh-CN.md
 .venv/
 .pytest_cache/

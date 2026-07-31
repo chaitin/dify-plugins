@@ -2,27 +2,24 @@ version: "3"
 
 vars:
   PYTHON_VERSION: "3.12"
-  PACKAGE: octobus.difypkg
-  DEV_DEPS: --no-project --with-requirements requirements.txt --with pytest --with responses --with ruff==0.16.0
 
 tasks:
   setup:
     cmds:
-      - uv venv --python {{.PYTHON_VERSION}}
-      - uv pip install -r requirements.txt pytest responses ruff==0.16.0
+      - uv sync --python {{.PYTHON_VERSION}} --frozen --all-groups
   lint:
     cmds:
-      - uv run --python {{.PYTHON_VERSION}} {{.DEV_DEPS}} ruff check .
-      - uv run --python {{.PYTHON_VERSION}} {{.DEV_DEPS}} ruff format --check .
+      - uv run --python {{.PYTHON_VERSION}} --frozen ruff check .
+      - uv run --python {{.PYTHON_VERSION}} --frozen ruff format --check .
   test:
-    cmds: ['uv run --python {{.PYTHON_VERSION}} {{.DEV_DEPS}} pytest -q tests']
+    cmds: ['uv run --python {{.PYTHON_VERSION}} --frozen pytest -q tests']
   validate:
     cmds:
       - test -f manifest.yaml
       - test -f PRIVACY.md
       - test -f README.md
       - test -f README.zh-CN.md
-      - grep -q minimum_dify_version manifest.yaml
+      - uv run --python {{.PYTHON_VERSION}} --frozen python scripts/build.py --validate-only
   check:
     cmds:
       - task: lint
@@ -31,7 +28,9 @@ tasks:
   build:
     deps: [check]
     cmds:
-      - mkdir -p dist
-      - '{{default "dify" .DIFY_PLUGIN_CLI}} plugin package . --output_path "$PWD/dist/{{.PACKAGE}}"'
+      - |
+        DIST_DIR='{{default "dist" .DIST_DIR}}' \
+        DIFY_PLUGIN_CLI='{{default "dify" .DIFY_PLUGIN_CLI}}' \
+        uv run --python {{.PYTHON_VERSION}} --frozen python scripts/build.py
   clean:
     cmds: [rm -rf dist .pytest_cache .ruff_cache]

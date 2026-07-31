@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">从清晰工作流到复杂工作流</title>
+  <desc id="desc">左侧展示简洁的 Dify 工作流，右侧展示随业务复杂度上升而增多的节点和交叉连线。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f9ff"/>
+      <stop offset="1" stop-color="#eef2ff"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7792ff"/>
+      <stop offset="1" stop-color="#6b4eff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#26356f" flood-opacity=".12"/>
+    </filter>
+    <marker id="lineArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa7c7"/>
+    </marker>
+    <style>
+      .title { font: 700 46px "Noto Sans SC", "Microsoft YaHei", sans-serif; fill: #18213d; }
+      .subtitle { font: 400 22px "Noto Sans SC", "Microsoft YaHei", sans-serif; fill: #64708f; }
+      .panel-title { font: 700 28px "Noto Sans SC", "Microsoft YaHei", sans-serif; fill: #263253; }
+      .panel-note { font: 400 18px "Noto Sans SC", "Microsoft YaHei", sans-serif; fill: #75809c; }
+      .node-text { font: 600 17px "Noto Sans SC", "Microsoft YaHei", sans-serif; fill: #34405f; text-anchor: middle; dominant-baseline: middle; }
+      .flow { fill: none; stroke: #9aa7c7; stroke-width: 3; marker-end: url(#lineArrow); }
+      .flow-complex { fill: none; stroke: #a6afc8; stroke-width: 2.5; marker-end: url(#lineArrow); opacity: .9; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1500" cy="80" r="210" fill="#ded8ff" opacity=".32"/>
+  <circle cx="70" cy="850" r="230" fill="#d7e9ff" opacity=".38"/>
+
+  <text x="800" y="78" text-anchor="middle" class="title">当业务复杂度不断上升</text>
+  <text x="800" y="118" text-anchor="middle" class="subtitle">可视化编排依然直观，但维护成本会随节点、分支和交叉依赖快速增长</text>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="175" width="590" height="610" rx="30" fill="#fff"/>
+    <rect x="930" y="175" width="590" height="610" rx="30" fill="#fff"/>
+  </g>
+
+  <text x="120" y="228" class="panel-title">路径清晰的 Workflow</text>
+  <text x="120" y="260" class="panel-note">少量节点 · 明确输入输出 · 易于协作</text>
+
+  <path class="flow" d="M190 440 H277"/>
+  <path class="flow" d="M397 440 H484"/>
+  <path class="flow" d="M544 480 V550"/>
+  <g>
+    <rect x="110" y="395" width="80" height="90" rx="18" fill="#edf4ff" stroke="#8ab4ff" stroke-width="2"/>
+    <circle cx="150" cy="423" r="11" fill="#6196f5"/>
+    <text x="150" y="456" class="node-text">开始</text>
+    <rect x="278" y="395" width="120" height="90" rx="18" fill="#f2efff" stroke="#9d87ff" stroke-width="2"/>
+    <circle cx="338" cy="423" r="11" fill="#846af4"/>
+    <text x="338" y="456" class="node-text">知识检索</text>
+    <rect x="485" y="395" width="120" height="90" rx="18" fill="#eafaf5" stroke="#69caa8" stroke-width="2"/>
+    <circle cx="545" cy="423" r="11" fill="#48b58f"/>
+    <text x="545" y="456" class="node-text">模型生成</text>
+    <rect x="485" y="550" width="120" height="90" rx="18" fill="#fff4e8" stroke="#f0ad67" stroke-width="2"/>
+    <circle cx="545" cy="578" r="11" fill="#e9933b"/>
+    <text x="545" y="611" class="node-text">输出结果</text>
+  </g>
+  <rect x="160" y="687" width="430" height="48" rx="24" fill="#e9f8f1"/>
+  <text x="375" y="712" class="node-text" fill="#277c60">适合快速构建路径明确的业务应用</text>
+
+  <g>
+    <path d="M700 472 H880" stroke="url(#arrow)" stroke-width="12" stroke-linecap="round" marker-end="url(#lineArrow)"/>
+    <text x="790" y="434" text-anchor="middle" class="panel-title" fill="#6b4eff">复杂度上升</text>
+    <text x="790" y="514" text-anchor="middle" class="panel-note">更多状态 · 更多分支</text>
+  </g>
+
+  <text x="970" y="228" class="panel-title">不断膨胀的 Workflow</text>
+  <text x="970" y="260" class="panel-note">分支交叉 · 循环重试 · 状态与依赖增加</text>
+
+  <g>
+    <path class="flow-complex" d="M1028 360 H1115"/>
+    <path class="flow-complex" d="M1205 360 H1290"/>
+    <path class="flow-complex" d="M1160 400 V475"/>
+    <path class="flow-complex" d="M1335 400 V475"/>
+    <path class="flow-complex" d="M1205 520 H1290"/>
+    <path class="flow-complex" d="M1160 565 V635 H1290"/>
+    <path class="flow-complex" d="M1335 565 V635 H1205"/>
+    <path class="flow-complex" d="M1115 520 H1045 V635 H1115"/>
+    <path class="flow-complex" d="M1335 475 C1445 445 1455 340 1380 340"/>
+    <path class="flow-complex" d="M1290 520 C1235 520 1250 680 1115 680"/>
+    <path d="M1125 315 C1190 278 1320 285 1390 320" fill="none" stroke="#f09a8a" stroke-width="3" stroke-dasharray="8 8" marker-end="url(#lineArrow)"/>
+
+    <g fill="#f2efff" stroke="#9d87ff" stroke-width="2">
+      <rect x="940" y="320" width="88" height="80" rx="16"/>
+      <rect x="1115" y="320" width="90" height="80" rx="16"/>
+      <rect x="1290" y="320" width="90" height="80" rx="16"/>
+      <rect x="1115" y="475" width="90" height="90" rx="16"/>
+      <rect x="1290" y="475" width="90" height="90" rx="16"/>
+      <rect x="1115" y="635" width="90" height="90" rx="16"/>
+      <rect x="1290" y="635" width="90" height="90" rx="16"/>
+    </g>
+    <text x="984" y="360" class="node-text">输入</text>
+    <text x="1160" y="360" class="node-text">判断</text>
+    <text x="1335" y="360" class="node-text">工具 A</text>
+    <text x="1160" y="520" class="node-text">重试</text>
+    <text x="1335" y="520" class="node-text">工具 B</text>
+    <text x="1160" y="680" class="node-text">状态处理</text>
+    <text x="1335" y="680" class="node-text">结果合并</text>
+  </g>
+
+  <rect x="1010" y="742" width="430" height="48" rx="24" fill="#fff0ed"/>
+  <text x="1225" y="767" class="node-text" fill="#ae5547">复杂 Agent 需要更合适的工程化抽象</text>
+</svg>
