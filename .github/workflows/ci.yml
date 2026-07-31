@@ -49,14 +49,14 @@ jobs:
         with: {version: '0.8.3', enable-cache: true}
       - uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2
         with: {version: '3.44.1'}
-      - run: task --dir "${{ matrix.path }}" check
+      - run: task --dir "${{ matrix.plugin.path }}" check
       - id: cli
         run: echo "path=$(scripts/resolve-dify-plugin-cli.sh)" >> "$GITHUB_OUTPUT"
-      - run: task --dir "${{ matrix.path }}" build DIST_DIR="$GITHUB_WORKSPACE/dist"
+      - run: task --dir "${{ matrix.plugin.path }}" build DIST_DIR="$GITHUB_WORKSPACE/dist"
         env:
           DIFY_PLUGIN_CLI: ${{ steps.cli.outputs.path }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ${{ matrix.name }}
-          path: dist/*.difypkg
+          name: ${{ matrix.plugin.name }}
+          path: dist/${{ matrix.plugin.name }}-*.difypkg
           if-no-files-found: error

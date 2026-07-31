@@ -1,0 +1,8 @@
+title = "Chaitin Dify Plugins secret scanning"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "uv lockfiles contain package hashes that match token formats"
+paths = ['''(^|/)uv\.lock$''']
