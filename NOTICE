@@ -1,2 +1,15 @@
 Chaitin Dify Plugins
 Copyright 2025-2026 Chaitin
+
+The agent-compose plugins interoperate over HTTP with agent-compose, which is
+distributed separately under AGPL-3.0:
+https://github.com/chaitin/agent-compose
+
+The OctoBus plugin interoperates over HTTP/MCP with OctoBus, which is
+distributed separately under GPL-3.0:
+https://github.com/chaitin/OctoMation
+
+Those external services and their source code are not bundled in this
+repository's plugin packages. Their names are used only to describe
+interoperability. Retain upstream copyright and licensing information if
+third-party code or assets are added in the future.

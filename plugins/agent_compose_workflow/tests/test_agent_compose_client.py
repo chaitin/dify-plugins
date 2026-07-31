@@ -1,10 +1,8 @@
 import pytest
 import responses
 from dify_plugin.core.runtime import Session
-from dify_plugin.entities.agent import AgentRuntime
 from dify_plugin.entities.tool import ToolRuntime
 from dify_plugin.invocations.storage import StorageInvocationError
-from strategies.dynamic_workflow import DynamicWorkflowAgentStrategy, DynamicWorkflowParams
 
 from client.agent_compose import (
     GET_PROJECT_PROCEDURE,
@@ -30,83 +28,6 @@ def test_cleanup_policy_to_proto() -> None:
     assert cleanup_policy_to_proto("keep_running").startswith("RUN_SANDBOX_")
     with pytest.raises(AgentComposeError):
         cleanup_policy_to_proto("forever")
-
-
-def test_agent_strategy_defaults_to_stop_on_completion() -> None:
-    params = DynamicWorkflowParams(agent="project/agent", query="hello")
-
-    assert params.cleanup_policy == "stop_on_completion"
-
-
-def test_agent_strategy_does_not_expose_manual_sandbox_id() -> None:
-    assert "sandbox_id" not in DynamicWorkflowParams.model_fields
-
-
-@responses.activate
-def test_agent_strategy_stop_mode_skips_storage_and_emits_distinct_outputs() -> None:
-    base_url = "http://agent-compose.test"
-    responses.post(
-        base_url + RUN_AGENT_PROCEDURE,
-        json={
-            "run": {
-                "summary": {
-                    "runId": "run-1",
-                    "sandboxId": "sandbox-1",
-                    "status": "RUN_STATUS_SUCCEEDED",
-                },
-                "output": "done",
-            }
-        },
-    )
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(ValueError("storage must not be used"))
-    strategy = DynamicWorkflowAgentStrategy(
-        runtime=AgentRuntime(user_id="user-1"),
-        session=session,
-    )
-
-    messages = list(
-        strategy._invoke(
-            {
-                "agent_compose_url": base_url,
-                "agent_compose_token": "token",
-                "agent": '{"project_id":"project-1","agent_name":"writer"}',
-                "query": "hello",
-                "cleanup_policy": "stop_on_completion",
-            }
-        )
-    )
-
-    assert [message.type.value for message in messages].count("text") == 1
-    assert [message.type.value for message in messages].count("json") == 1
-    variables = {
-        message.message.variable_name: message.message.variable_value
-        for message in messages
-        if message.type.value == "variable"
-    }
-    assert variables == {
-        "run_id": "run-1",
-        "sandbox_id": "sandbox-1",
-        "status": "RUN_STATUS_SUCCEEDED",
-        "error": "",
-        "warnings": [],
-    }
-    assert b'"sandboxId"' not in responses.calls[0].request.body
-
-
-def test_agent_strategy_accepts_connection_settings() -> None:
-    params = DynamicWorkflowParams(
-        agent_compose_url="http://agent-compose.test",
-        agent_compose_token="secret-token",
-        agent_compose_timeout_seconds=120,
-        agent="project/agent",
-        query="hello",
-    )
-
-    assert params.agent_compose_url == "http://agent-compose.test"
-    assert params.agent_compose_token == "secret-token"
-    assert params.agent_compose_timeout_seconds == 120
 
 
 def test_agent_compose_config_from_mapping_overrides_environment(
@@ -722,7 +643,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
 
 
 @responses.activate
-def test_connect_error_uses_structured_message() -> None:
+def test_http_error_does_not_reflect_remote_message() -> None:
     base_url = "http://agent-compose.test"
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
@@ -730,7 +651,24 @@ def test_connect_error_uses_structured_message() -> None:
         status=400,
     )
 
-    with pytest.raises(AgentComposeError, match="agent is disabled"):
+    with pytest.raises(AgentComposeError, match="HTTP 400") as caught:
         AgentComposeClient(AgentComposeConfig(base_url=base_url)).run_agent(
             project_id="project-1", agent_name="agent", prompt="hello"
         )
+    assert "agent is disabled" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["ftp://agent-compose.test", "http://user:secret@agent-compose.test", "https://x.test?q=1"],
+)
+def test_config_rejects_unsafe_urls(url: str) -> None:
+    with pytest.raises(AgentComposeError):
+        AgentComposeConfig(base_url=url).normalized_base_url()
+
+
+def test_config_rejects_excessive_timeout() -> None:
+    with pytest.raises(AgentComposeError, match="between 1 and"):
+        AgentComposeConfig(
+            base_url="https://agent-compose.test", timeout_seconds=3601
+        ).normalized_base_url()

@@ -10,7 +10,9 @@ This is a monorepo of independently installable Dify plugins maintained by Chait
 - Run `task check` and `task build`; plugin Taskfiles expose `lint`, `test`, `validate`, `build`, `check`, and `clean`.
 - Keep manifests, tests, privacy policy, changelog, and bilingual documentation aligned.
 - Do not add private hosts/IPs, secrets, private dependencies, generated packages, caches, or virtual environments.
-- Use SPDX `Apache-2.0` headers for new substantive source files.
+- Every file must have SPDX metadata. Prefer SPDX headers for substantive source files;
+  use `REUSE.toml` annotations for generated, bulk, or non-commentable files.
+- Preserve third-party copyright and license metadata; never relabel third-party work.
 - Preserve plugin identities and versions unless a migration explicitly requires a breaking rename.
 
 See `docs/architecture.md` and `docs/development.md` before structural changes.

@@ -11,5 +11,7 @@ CHANGELOG.md
 .cache/
 .pytest_cache/
 .ruff_cache/
+.coverage
+.gitignore
 __pycache__/
 *.pyc

@@ -2,6 +2,8 @@
 .cache/
 .pytest_cache/
 .ruff_cache/
+.coverage
+.gitignore
 .task/
 __pycache__/
 dist/

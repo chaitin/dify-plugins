@@ -23,3 +23,10 @@ def test_private_reference_scan_covers_all_rfc1918_networks(tmp_path: Path) -> N
 def test_private_reference_scan_allows_localhost(tmp_path: Path) -> None:
     (tmp_path / "localhost.txt").write_text("127.0.0.1 localhost", encoding="utf-8")
     assert scan_private_references(tmp_path) == []
+
+
+def test_agent_compose_clients_do_not_drift() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = root / "plugins/agent_compose_workflow/client/agent_compose.py"
+    strategy = root / "plugins/agent_compose_strategy/client/agent_compose.py"
+    assert workflow.read_bytes() == strategy.read_bytes()

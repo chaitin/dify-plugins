@@ -154,17 +154,17 @@ Tool 模式最容易理解。它与其他 Tool 节点一样：当 Dify Workflow 
 1. 在 Dify 插件页面导入 `agent_compose_workflow-<version>.difypkg`。
 2. 在 Tool Provider 中配置 `agent_compose_url`、可选的 `agent_compose_token` 和超时时间。
 3. 在 Workflow 中添加 Tool 节点。
-4. 选择 **Dynamic Workflow Tool → Run Dynamic Workflow**。
+4. 选择 **agent-compose Workflow → Run agent-compose Agent**。
 5. 从动态列表选择 Agent，填写或绑定 `query`；需要时补充 `instruction`。
 6. 根据任务选择沙箱清理策略，并把 `text` 或结构化输出连接到下游节点。
 
 > 【配图建议 3：Tool Provider 凭据配置页】
 >
-> 【配图建议 4：Workflow 中选择 Run Dynamic Workflow，并展示 Agent 动态下拉框】
+> 【配图建议 4：Workflow 中选择 Run agent-compose Agent，并展示 Agent 动态下拉框】
 
 ### Agent Strategy：把 Agent 节点的执行交给 agent-compose
 
-Strategy 模式不是在画布中增加一个普通 Tool，而是改变 Dify Agent 节点“由谁来执行”。用户仍然看到一个 Agent 节点，但该节点收到 Query 后，会由 Dynamic Workflow Strategy 将任务转交给指定的 agent-compose Agent。
+Strategy 模式不是在画布中增加一个普通 Tool，而是改变 Dify Agent 节点“由谁来执行”。用户仍然看到一个 Agent 节点，但该节点收到 Query 后，会由 agent-compose Strategy 将任务转交给指定的 agent-compose Agent。
 
 它适合以下情况：
 
@@ -177,14 +177,14 @@ Strategy 模式不是在画布中增加一个普通 Tool，而是改变 Dify Age
 
 1. 在 Dify 插件页面导入 `agent_compose_strategy-<version>.difypkg`。
 2. 在 Workflow 或 Chatflow 中添加 Agent 节点。
-3. 将 Strategy 选择为 **Dynamic Workflow Strategy**。
+3. 将 Strategy 选择为 **agent-compose Strategy**。
 4. 在节点内配置 `agent_compose_url`、Token 和超时时间。若部署环境已经设置统一默认值，也可以使用环境配置作为兜底。
 5. 在 `agent` 中填写 `project/agent`，例如 `adp-demo-agents/print_date`。只有当 Agent 名称在所有项目中唯一时，才建议只写 Agent 名。
 6. 绑定 `query`，按需填写 `instruction`、清理策略和输出 Schema。
 
 Strategy 目前使用文本填写 Agent 名称，这是因为 Dify 的 Agent Strategy 参数暂不提供与 Tool 相同的动态选项回调能力。这也是两种模式在配置体验上的一个直观差异。
 
-> 【配图建议 5：Agent 节点选择 Dynamic Workflow Strategy】
+> 【配图建议 5：Agent 节点选择 agent-compose Strategy】
 >
 > 【配图建议 6：Strategy 参数配置，重点框出 `project/agent` 与 `cleanup_policy`】
 

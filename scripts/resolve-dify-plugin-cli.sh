@@ -34,16 +34,28 @@ if [[ "${version}" != "0.6.3" ]]; then
 fi
 
 target="${cache_dir}/${version}/${asset}"
+
+verify_checksum() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s  %s\n' "${checksum}" "$1" | sha256sum --check --status
+  else
+    [[ "$(shasum -a 256 "$1" | awk '{print $1}')" == "${checksum}" ]]
+  fi
+}
+
+if [[ -e "${target}" ]] && ! verify_checksum "${target}"; then
+  rm -f -- "${target}"
+fi
 if [[ ! -x "${target}" ]]; then
   mkdir -p "$(dirname "${target}")"
-  temporary="${target}.download.$$"
+  temporary="$(mktemp "${target}.download.XXXXXX")"
   trap 'rm -f "${temporary}"' EXIT
   curl --fail --location --retry 3 --output "${temporary}" \
     "https://github.com/langgenius/dify-plugin-daemon/releases/download/${version}/${asset}"
-  printf '%s  %s\n' "${checksum}" "${temporary}" | sha256sum --check --status
+  verify_checksum "${temporary}"
   chmod 0755 "${temporary}"
   mv "${temporary}" "${target}"
   trap - EXIT
 fi
 
-realpath "${target}"
+(cd -- "$(dirname -- "${target}")" && printf '%s/%s\n' "${PWD}" "$(basename -- "${target}")")

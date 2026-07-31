@@ -3,9 +3,13 @@ import os
 import uuid
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import requests
+
+MAX_TIMEOUT_SECONDS = 3600
+MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+MAX_ERROR_MESSAGE_CHARS = 512
 
 
 class OctoBusError(Exception):
@@ -63,6 +67,11 @@ class OctoBusConfig:
         url = self.url.strip().rstrip("/")
         if not url:
             raise OctoBusError("octobus_url is required")
+        parsed = urlsplit(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise OctoBusError("octobus_url must be an absolute HTTP(S) URL")
+        if parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise OctoBusError("octobus_url must not contain credentials, a query, or a fragment")
         return url
 
 
@@ -229,11 +238,16 @@ class OctoBusClient:
         return self._headers(token)
 
     def _get_json(self, path: str, *, headers: dict[str, str] | None = None) -> Any:
-        response = requests.get(
-            self.config.normalized_url() + path,
-            headers=headers or self._headers(),
-            timeout=self.config.timeout_seconds,
-        )
+        try:
+            response = requests.get(
+                self.config.normalized_url() + path,
+                headers=headers or self._headers(),
+                timeout=self.config.timeout_seconds,
+            )
+        except requests.Timeout as exc:
+            raise OctoBusError("OctoBus request timed out") from exc
+        except requests.RequestException as exc:
+            raise OctoBusError("cannot reach OctoBus") from exc
         return parse_response(response)
 
     def _post_json(
@@ -243,12 +257,17 @@ class OctoBusClient:
         *,
         headers: dict[str, str] | None = None,
     ) -> Any:
-        response = requests.post(
-            self.config.normalized_url() + path,
-            headers={**(headers or self._headers()), "Content-Type": "application/json"},
-            json=payload,
-            timeout=self.config.timeout_seconds,
-        )
+        try:
+            response = requests.post(
+                self.config.normalized_url() + path,
+                headers={**(headers or self._headers()), "Content-Type": "application/json"},
+                json=payload,
+                timeout=self.config.timeout_seconds,
+            )
+        except requests.Timeout as exc:
+            raise OctoBusError("OctoBus request timed out") from exc
+        except requests.RequestException as exc:
+            raise OctoBusError("cannot reach OctoBus") from exc
         return parse_response(response)
 
     def _mcp_request(
@@ -276,8 +295,8 @@ class OctoBusClient:
         error = body.get("error")
         if error:
             if isinstance(error, dict):
-                raise OctoBusError(str(error.get("message") or error))
-            raise OctoBusError(str(error))
+                raise OctoBusError(safe_remote_message(error.get("message") or error))
+            raise OctoBusError(safe_remote_message(error))
         result = body.get("result")
         if not isinstance(result, dict):
             raise OctoBusError("OctoBus MCP response did not contain a result")
@@ -288,7 +307,9 @@ class OctoBusClient:
 
 def parse_response(response: requests.Response) -> Any:
     if response.status_code < 200 or response.status_code >= 300:
-        raise OctoBusError(f"OctoBus returned HTTP {response.status_code}: {response.text}")
+        raise OctoBusError(f"OctoBus returned HTTP {response.status_code}")
+    if len(response.content) > MAX_RESPONSE_BYTES:
+        raise OctoBusError("OctoBus response exceeded the allowed size")
     try:
         return response.json()
     except ValueError as exc:
@@ -302,9 +323,16 @@ def parse_timeout(value: Any, default: float) -> float:
         timeout = float(value)
     except (TypeError, ValueError) as exc:
         raise OctoBusError("timeout must be a number") from exc
-    if timeout <= 0:
-        raise OctoBusError("timeout must be positive")
+    if not 0 < timeout <= MAX_TIMEOUT_SECONDS:
+        raise OctoBusError(f"timeout must be between 1 and {MAX_TIMEOUT_SECONDS} seconds")
     return timeout
+
+
+def safe_remote_message(value: Any) -> str:
+    message = str(value).replace("\r", " ").replace("\n", " ").strip()
+    if not message:
+        return "OctoBus returned an error"
+    return message[:MAX_ERROR_MESSAGE_CHARS]
 
 
 def parse_headers_json(value: Any) -> dict[str, str] | None:
@@ -466,7 +494,7 @@ def mcp_error_message(result: dict[str, Any]) -> str:
             str(item.get("text")) for item in content if isinstance(item, dict) and item.get("text")
         ]
         if messages:
-            return "; ".join(messages)
+            return safe_remote_message("; ".join(messages))
     return "OctoBus MCP tool returned an error"
 
 

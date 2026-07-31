@@ -722,7 +722,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
 
 
 @responses.activate
-def test_connect_error_uses_structured_message() -> None:
+def test_http_error_does_not_reflect_remote_message() -> None:
     base_url = "http://agent-compose.test"
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
@@ -730,7 +730,24 @@ def test_connect_error_uses_structured_message() -> None:
         status=400,
     )
 
-    with pytest.raises(AgentComposeError, match="agent is disabled"):
+    with pytest.raises(AgentComposeError, match="HTTP 400") as caught:
         AgentComposeClient(AgentComposeConfig(base_url=base_url)).run_agent(
             project_id="project-1", agent_name="agent", prompt="hello"
         )
+    assert "agent is disabled" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["ftp://agent-compose.test", "http://user:secret@agent-compose.test", "https://x.test?q=1"],
+)
+def test_config_rejects_unsafe_urls(url: str) -> None:
+    with pytest.raises(AgentComposeError):
+        AgentComposeConfig(base_url=url).normalized_base_url()
+
+
+def test_config_rejects_excessive_timeout() -> None:
+    with pytest.raises(AgentComposeError, match="between 1 and"):
+        AgentComposeConfig(
+            base_url="https://agent-compose.test", timeout_seconds=3601
+        ).normalized_base_url()

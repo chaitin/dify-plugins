@@ -19,7 +19,7 @@ tasks:
   test:
     deps: [setup]
     cmds:
-      - PYTHONPATH=. uv run --frozen pytest -q
+      - PYTHONPATH=. uv run --frozen pytest -q --cov=rivers_client --cov=tools --cov-report=term-missing --cov-fail-under=85
   validate:
     deps: [setup]
     cmds:

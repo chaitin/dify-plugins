@@ -14,7 +14,7 @@ versioned, self-contained plugin packages for Dify 1.15.0 and later.
 | agent-compose Strategy | Agent strategy | Use agent-compose in Dify Agent nodes | [Plugin README](plugins/agent_compose_strategy/README.md) |
 | OctoBus | Tool | Discover and invoke OctoBus capabilities | [Plugin README](plugins/octobus/README.md) |
 
-Download signed build artifacts and `SHA256SUMS` from [GitHub Releases](../../releases).
+Download attested build artifacts and `SHA256SUMS` from [GitHub Releases](../../releases).
 Install a `.difypkg` through Dify's plugin management interface.
 
 ## Development

@@ -26,6 +26,16 @@ tasks:
   validate:
     desc: Validate all plugin manifests and repository conventions
     cmds: [uv run python scripts/validate_plugins.py]
+  license:
+    desc: Validate REUSE/SPDX license metadata
+    cmds: [uv run reuse lint]
+  security:
+    desc: Audit Python dependencies and source code
+    cmds:
+      - uv run bandit -q -ll -r scripts plugins -x '*/tests/*,*/.venv/*'
+      - uv run pip-audit
+      - for: { var: PLUGINS }
+        cmd: uv run pip-audit --disable-pip --no-deps --requirement plugins/{{.ITEM}}/requirements.txt
   build:
     desc: Build every plugin package
     deps: [check]
@@ -36,7 +46,7 @@ tasks:
         vars: { PLUGIN: '{{.ITEM}}' }
   check:
     desc: Run all required local quality gates
-    deps: [lint, test, validate]
+    deps: [lint, test, validate, license, security]
   plugin:lint:
     internal: true
     dir: plugins/{{.PLUGIN}}

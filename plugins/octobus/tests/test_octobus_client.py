@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import requests
 import responses
 
 OCTOBUS_CLIENT_PATH = Path(__file__).resolve().parents[1] / "client" / "octobus.py"
@@ -47,6 +48,20 @@ def test_config_parses_separate_admin_and_capset_tokens():
     assert parsed.admin_token == "admin"
     assert parsed.capset_token == "default"
     assert parsed.capset_tokens == {"security": "security-secret"}
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["octobus.local", "ftp://octobus.local", "http://user:secret@octobus.local", "https://x?q=1"],
+)
+def test_config_rejects_unsafe_urls(url):
+    with pytest.raises(OctoBusError):
+        OctoBusConfig(url=url).normalized_url()
+
+
+def test_config_rejects_excessive_timeout():
+    with pytest.raises(OctoBusError, match="between 1 and"):
+        octobus_client.parse_timeout("3601", 60)
 
 
 @responses.activate
@@ -121,6 +136,31 @@ def test_list_capsets_does_not_fall_back_to_agent_compose():
         OctoBusClient(config()).list_capsets()
 
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_http_error_does_not_reflect_remote_body():
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/admin/v1/capsets",
+        body="secret upstream diagnostic",
+        status=500,
+    )
+    with pytest.raises(OctoBusError, match="HTTP 500") as caught:
+        OctoBusClient(config()).list_capsets()
+    assert "secret upstream diagnostic" not in str(caught.value)
+
+
+@responses.activate
+def test_timeout_is_wrapped_as_safe_octobus_error():
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/admin/v1/status",
+        body=requests.exceptions.ConnectTimeout("secret URL detail"),
+    )
+    with pytest.raises(OctoBusError, match="timed out") as caught:
+        OctoBusClient(config()).status()
+    assert "secret URL detail" not in str(caught.value)
 
 
 @responses.activate

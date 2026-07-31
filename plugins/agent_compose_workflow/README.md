@@ -14,7 +14,7 @@ Use this plugin when a Dify workflow needs one step backed by a coding agent, a 
 - A reachable agent-compose HTTP/Connect endpoint.
 - An optional bearer token when the service enables authentication.
 
-Install the versioned `.difypkg`, configure the provider, then add **Run Dynamic Workflow** to a workflow. The agent selector is populated dynamically from agent-compose projects.
+Install the versioned `.difypkg`, configure the provider, then add **Run agent-compose Agent** to a workflow. The agent selector is populated dynamically from agent-compose projects.
 
 ## Inputs and outputs
 

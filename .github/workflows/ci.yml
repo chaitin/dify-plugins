@@ -15,22 +15,26 @@ jobs:
     outputs:
       matrix: ${{ steps.plugins.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
       - id: plugins
         run: echo "matrix=$(python3 scripts/discover_plugins.py)" >> "$GITHUB_OUTPUT"
   repository:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with: {version: '0.8.3', enable-cache: true}
-      - uses: arduino/setup-task@v2
+      - uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2
         with: {version: '3.44.1'}
       - run: uv sync --frozen
       - run: uv run ruff check scripts tests
       - run: uv run ruff format --check scripts tests
       - run: uv run pytest
       - run: uv run python scripts/validate_plugins.py
+      - run: task license
+      - run: task security
   plugin:
     needs: discover
     if: ${{ fromJSON(needs.discover.outputs.matrix).plugin[0] != null }}
@@ -39,10 +43,11 @@ jobs:
       matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: {persist-credentials: false}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with: {version: '0.8.3', enable-cache: true}
-      - uses: arduino/setup-task@v2
+      - uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2
         with: {version: '3.44.1'}
       - run: task --dir "${{ matrix.path }}" check
       - id: cli
@@ -50,7 +55,7 @@ jobs:
       - run: task --dir "${{ matrix.path }}" build DIST_DIR="$GITHUB_WORKSPACE/dist"
         env:
           DIFY_PLUGIN_CLI: ${{ steps.cli.outputs.path }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ matrix.name }}
           path: dist/*.difypkg

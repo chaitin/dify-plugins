@@ -16,7 +16,6 @@ try:
 except ImportError:  # Executed directly as a script.
     from discover_plugins import discover
 
-EXPECTED = {"rivers_ioc", "agent_compose_workflow", "agent_compose_strategy", "octobus"}
 REQUIRED_FILES = (
     "manifest.yaml",
     "main.py",
@@ -89,14 +88,13 @@ def scan_private_references(root: Path) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--allow-partial", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
     plugins = discover(root)
     names = {item["name"] for item in plugins}
     errors: list[str] = []
-    if not args.allow_partial and names != EXPECTED:
-        errors.append(f"expected plugins {sorted(EXPECTED)}, found {sorted(names)}")
+    if not plugins:
+        errors.append("at least one plugin must be present")
     if len(names) != len(plugins):
         errors.append("plugin names must be unique")
     for item in plugins:

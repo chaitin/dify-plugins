@@ -1,9 +1,9 @@
 identity:
-  name: dynamic_workflow
+  name: agent_compose_strategy
   author: chaitin
   label:
-    en_US: Dynamic Workflow Strategy
-    zh_Hans: Dynamic Workflow Strategy
+    en_US: agent-compose Strategy
+    zh_Hans: agent-compose 策略
 description:
   en_US: Delegate this Agent node to an agent-compose AI coding agent running in an isolated sandbox. https://github.com/chaitin/agent-compose
   zh_Hans: 将当前 Agent 节点委托给在隔离沙箱中运行的 agent-compose AI 编码智能体。https://github.com/chaitin/agent-compose

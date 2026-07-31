@@ -12,7 +12,7 @@ tasks:
       - uv run --python {{.PYTHON_VERSION}} --frozen ruff check .
       - uv run --python {{.PYTHON_VERSION}} --frozen ruff format --check .
   test:
-    cmds: ['uv run --python {{.PYTHON_VERSION}} --frozen pytest -q tests']
+    cmds: ['uv run --python {{.PYTHON_VERSION}} --frozen pytest -q --cov=client --cov=provider --cov=tools --cov-report=term-missing --cov-fail-under=60 tests']
   validate:
     cmds:
       - test -f manifest.yaml

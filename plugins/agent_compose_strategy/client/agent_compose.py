@@ -5,6 +5,7 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 
 import requests
 from dify_plugin.invocations.storage import StorageInvocationError
@@ -12,10 +13,11 @@ from dify_plugin.invocations.storage import StorageInvocationError
 GET_PROJECT_PROCEDURE = "/agentcompose.v2.ProjectService/GetProject"
 LIST_PROJECTS_PROCEDURE = "/agentcompose.v2.ProjectService/ListProjects"
 RUN_AGENT_PROCEDURE = "/agentcompose.v2.RunService/RunAgent"
+MAX_TIMEOUT_SECONDS = 3600
 
 
 class AgentComposeError(RuntimeError):
-    """Raised when dynamic-workflow cannot complete an agent-compose request."""
+    """Raised when a Dify integration cannot complete an agent-compose request."""
 
 
 @dataclass(frozen=True)
@@ -27,16 +29,27 @@ class AgentComposeConfig:
     @classmethod
     def from_env(cls) -> "AgentComposeConfig":
         base_url = (
-            os.getenv("DYNAMIC_WORKFLOW_AGENT_COMPOSE_URL") or os.getenv("AGENT_COMPOSE_HOST") or ""
+            os.getenv("AGENT_COMPOSE_URL")
+            or os.getenv("DYNAMIC_WORKFLOW_AGENT_COMPOSE_URL")
+            or os.getenv("AGENT_COMPOSE_HOST")
+            or ""
         ).strip()
-        timeout_raw = os.getenv("DYNAMIC_WORKFLOW_TIMEOUT_SECONDS", "900").strip()
+        timeout_raw = (
+            os.getenv("AGENT_COMPOSE_TIMEOUT_SECONDS")
+            or os.getenv("DYNAMIC_WORKFLOW_TIMEOUT_SECONDS")
+            or "900"
+        ).strip()
         try:
             timeout_seconds = int(timeout_raw)
         except ValueError as exc:
-            raise AgentComposeError("DYNAMIC_WORKFLOW_TIMEOUT_SECONDS must be an integer") from exc
+            raise AgentComposeError("AGENT_COMPOSE_TIMEOUT_SECONDS must be an integer") from exc
         return cls(
             base_url=base_url,
-            bearer_token=os.getenv("DYNAMIC_WORKFLOW_AGENT_COMPOSE_TOKEN", "").strip(),
+            bearer_token=(
+                os.getenv("AGENT_COMPOSE_TOKEN")
+                or os.getenv("DYNAMIC_WORKFLOW_AGENT_COMPOSE_TOKEN")
+                or ""
+            ).strip(),
             timeout_seconds=timeout_seconds,
         )
 
@@ -66,13 +79,19 @@ class AgentComposeConfig:
         base_url = self.base_url.rstrip("/")
         if not base_url:
             raise AgentComposeError(
-                "agent-compose URL is not configured. Set "
-                "DYNAMIC_WORKFLOW_AGENT_COMPOSE_URL or AGENT_COMPOSE_HOST."
+                "agent-compose URL is not configured. Set AGENT_COMPOSE_URL or AGENT_COMPOSE_HOST."
             )
-        if not base_url.startswith(("http://", "https://")):
-            raise AgentComposeError("agent-compose URL must start with http:// or https://")
-        if self.timeout_seconds <= 0:
-            raise AgentComposeError("agent-compose timeout must be greater than zero")
+        parsed = urlsplit(base_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise AgentComposeError("agent-compose URL must be an absolute HTTP(S) URL")
+        if parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise AgentComposeError(
+                "agent-compose URL must not contain credentials, a query, or a fragment"
+            )
+        if not 0 < self.timeout_seconds <= MAX_TIMEOUT_SECONDS:
+            raise AgentComposeError(
+                f"agent-compose timeout must be between 1 and {MAX_TIMEOUT_SECONDS} seconds"
+            )
         return base_url
 
 
@@ -202,7 +221,7 @@ class AgentComposeClient:
             "sandboxId": sandbox_id.strip(),
             "cleanupPolicy": cleanup_policy_to_proto(cleanup_policy),
             "outputSchemaJson": output_schema_json.strip(),
-            "clientRequestId": client_request_id.strip() or f"dify-dynamic-workflow-{uuid.uuid4()}",
+            "clientRequestId": client_request_id.strip() or f"dify-agent-compose-{uuid.uuid4()}",
         }
         payload = {key: value for key, value in payload.items() if value not in {"", None}}
 
@@ -277,16 +296,9 @@ class AgentComposeClient:
                 timeout=self.config.timeout_seconds,
             )
         except requests.RequestException as exc:
-            raise AgentComposeError(f"cannot reach agent-compose: {exc}") from exc
+            raise AgentComposeError("cannot reach agent-compose") from exc
         if response.status_code < 200 or response.status_code >= 300:
-            detail = response.text.strip()
-            try:
-                error_body = response.json()
-            except ValueError:
-                error_body = None
-            if isinstance(error_body, dict):
-                detail = str(error_body.get("message") or error_body.get("code") or detail)
-            raise AgentComposeError(f"agent-compose returned HTTP {response.status_code}: {detail}")
+            raise AgentComposeError(f"agent-compose returned HTTP {response.status_code}")
         try:
             body = response.json()
         except ValueError as exc:

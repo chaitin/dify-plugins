@@ -2,13 +2,13 @@ identity:
   name: run_agent
   author: chaitin
   label:
-    en_US: Run Dynamic Workflow
-    zh_Hans: 运行动态工作流
+    en_US: Run agent-compose Agent
+  zh_Hans: 运行 agent-compose Agent
 description:
   human:
     en_US: Select an agent-compose AI coding agent and run it in an isolated sandbox. https://github.com/chaitin/agent-compose
     zh_Hans: 选择 agent-compose AI 编码智能体并在隔离沙箱中运行。https://github.com/chaitin/agent-compose
-  llm: Run a selected Chaitin agent-compose agent as a dynamic workflow.
+  llm: Run a selected Chaitin agent-compose agent from a Dify workflow.
 parameters:
   - name: agent
     type: dynamic-select
