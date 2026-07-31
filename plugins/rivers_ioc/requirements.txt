@@ -19,7 +19,7 @@ click==8.4.2
     # via flask
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-dify-plugin==0.9.1
+dify-plugin==0.10.0
     # via rivers-ioc-development
 dpkt==1.9.8
     # via dify-plugin
