@@ -32,7 +32,7 @@ jobs:
       - run: uv run ruff check scripts tests
       - run: uv run ruff format --check scripts tests
       - run: uv run pytest
-      - run: uv run python scripts/validate_plugins.py
+      - run: task validate
       - run: task license
       - run: task security
   plugin:
