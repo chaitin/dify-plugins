@@ -1,0 +1,44 @@
+version: "3"
+
+vars:
+  PYTHON: .venv/bin/python
+  DIFY_PLUGIN_CLI: '{{default "dify" .DIFY_PLUGIN_CLI}}'
+  DIST_DIR: '{{default "dist" .DIST_DIR}}'
+
+tasks:
+  setup:
+    desc: Install the isolated development environment
+    cmds:
+      - uv venv --python 3.12
+      - uv pip install --python {{.PYTHON}} -r requirements.txt pytest ruff pyyaml
+    sources: [requirements.txt]
+    generates: [.venv/bin/python]
+  lint:
+    deps: [setup]
+    cmds:
+      - .venv/bin/ruff check .
+      - .venv/bin/ruff format --check .
+  test:
+    deps: [setup]
+    cmds:
+      - PYTHONPATH=. {{.PYTHON}} -m pytest -q
+  validate:
+    deps: [setup]
+    cmds:
+      - PYTHONPATH=. {{.PYTHON}} -m pytest -q tests/test_manifest.py
+  check:
+    cmds:
+      - task: lint
+      - task: test
+      - task: validate
+  build:
+    deps: [check]
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - '{{.DIFY_PLUGIN_CLI}} plugin package . -o {{.DIST_DIR}}/rivers_ioc-0.2.0.difypkg'
+  package:
+    cmds:
+      - task: build
+  clean:
+    cmds:
+      - rm -rf .venv .pytest_cache .ruff_cache dist

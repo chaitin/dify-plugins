@@ -1,0 +1,29 @@
+identity:
+  author: chaitin
+  name: rivers_ioc
+  label:
+    en_US: Rivers IP Threat Intelligence
+    zh_Hans: 百川云 IP 威胁情报
+  description:
+    en_US: Query IP threat intelligence from Chaitin Rivers.
+    zh_Hans: 查询长亭百川云 IP 威胁情报。
+  icon: icon.svg
+tools:
+  - tools/rivers_ioc.yaml
+extra:
+  python:
+    source: provider/rivers_ioc.py
+credentials_for_provider:
+  api_key:
+    type: secret-input
+    required: true
+    label:
+      en_US: Rivers access token
+      zh_Hans: 百川云访问令牌
+    placeholder:
+      en_US: Enter your Rivers access token
+      zh_Hans: 请输入百川云访问令牌
+    help:
+      en_US: Create a token with threat-intelligence permission in the Rivers console.
+      zh_Hans: 请在百川云控制台创建具有威胁情报权限的令牌。
+    url: https://rivers.chaitin.cn/console/space

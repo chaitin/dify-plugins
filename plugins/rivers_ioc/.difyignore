@@ -1,0 +1,11 @@
+.venv/
+.pytest_cache/
+.ruff_cache/
+.task/
+__pycache__/
+dist/
+tests/
+docs/
+Taskfile.yml
+README.zh-CN.md
+pyproject.toml

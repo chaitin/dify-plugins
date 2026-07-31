@@ -1,0 +1,30 @@
+version: 0.2.0
+type: plugin
+author: chaitin
+name: rivers_ioc
+label:
+  en_US: Rivers IP Threat Intelligence
+  zh_Hans: 百川云 IP 威胁情报
+description:
+  en_US: Query IP threat intelligence from Chaitin Rivers.
+  zh_Hans: 查询长亭百川云 IP 威胁情报。
+icon: icon.svg
+resource:
+  memory: 268435456
+  permission:
+    tool:
+      enabled: true
+plugins:
+  tools:
+    - provider/rivers_ioc.yaml
+meta:
+  version: 0.2.0
+  arch: [amd64, arm64]
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main
+  minimum_dify_version: 1.15.0
+created_at: 2026-07-31T00:00:00+08:00
+privacy: PRIVACY.md
+verified: false
