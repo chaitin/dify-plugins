@@ -19,7 +19,7 @@ click==8.4.2
     # via flask
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-dify-plugin==0.9.1
+dify-plugin==0.10.0
     # via rivers-ioc-development
 dpkt==1.9.8
     # via dify-plugin
@@ -64,7 +64,7 @@ pydantic==2.13.4
     # via
     #   dify-plugin
     #   pydantic-settings
-pydantic-core==2.46.4
+pydantic-core==2.47.0
     # via pydantic
 pydantic-settings==2.14.2
     # via dify-plugin
