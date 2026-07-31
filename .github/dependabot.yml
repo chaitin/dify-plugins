@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
@@ -15,7 +15,7 @@ updates:
     groups:
       github-actions:
         patterns: ['*']
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /plugins/rivers_ioc
     schedule:
       interval: weekly
@@ -23,7 +23,7 @@ updates:
     groups:
       plugin-dependencies:
         patterns: ['*']
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /plugins/agent_compose_workflow
     schedule:
       interval: weekly
@@ -31,7 +31,7 @@ updates:
     groups:
       plugin-dependencies:
         patterns: ['*']
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /plugins/agent_compose_strategy
     schedule:
       interval: weekly
@@ -39,7 +39,7 @@ updates:
     groups:
       plugin-dependencies:
         patterns: ['*']
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /plugins/octobus
     schedule:
       interval: weekly

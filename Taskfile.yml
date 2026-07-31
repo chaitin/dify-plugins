@@ -25,7 +25,12 @@ tasks:
         vars: { PLUGIN: '{{.ITEM}}' }
   validate:
     desc: Validate all plugin manifests and repository conventions
-    cmds: [uv run python scripts/validate_plugins.py]
+    cmds:
+      - uv lock --check
+      - for: { var: PLUGINS }
+        cmd: uv lock --check --directory plugins/{{.ITEM}}
+      - uv run python scripts/validate_plugins.py
+      - uv run python scripts/validate_runtime_requirements.py
   license:
     desc: Validate REUSE/SPDX license metadata
     cmds: [uv run reuse lint]
