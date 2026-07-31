@@ -9,3 +9,5 @@ docs/
 Taskfile.yml
 README.zh-CN.md
 pyproject.toml
+uv.lock
+scripts/

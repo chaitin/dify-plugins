@@ -21,9 +21,7 @@ def normalize_ip(value: Any) -> str:
     try:
         return str(ipaddress.ip_address(value.strip()))
     except ValueError as exc:
-        raise RiversAPIError(
-            "The supplied value is not a valid IPv4 or IPv6 address."
-        ) from exc
+        raise RiversAPIError("The supplied value is not a valid IPv4 or IPv6 address.") from exc
 
 
 class RiversClient:
@@ -50,29 +48,19 @@ class RiversClient:
         owns_client = self._client is None
         client = self._client or httpx.Client(timeout=self._timeout)
         try:
-            response = client.get(
-                API_URL, params={"ip": normalized_ip}, headers=headers
-            )
+            response = client.get(API_URL, params={"ip": normalized_ip}, headers=headers)
         except httpx.TimeoutException as exc:
-            raise RiversAPIError(
-                "The Rivers API request timed out. Please try again."
-            ) from exc
+            raise RiversAPIError("The Rivers API request timed out. Please try again.") from exc
         except httpx.RequestError as exc:
-            raise RiversAPIError(
-                "The Rivers API could not be reached. Please try again."
-            ) from exc
+            raise RiversAPIError("The Rivers API could not be reached. Please try again.") from exc
         finally:
             if owns_client:
                 client.close()
 
         if response.status_code in (401, 403):
-            raise RiversAPIError(
-                "The Rivers access token is invalid or lacks permission."
-            )
+            raise RiversAPIError("The Rivers access token is invalid or lacks permission.")
         if response.status_code == 429:
-            raise RiversAPIError(
-                "The Rivers API rate limit was exceeded. Please try again later."
-            )
+            raise RiversAPIError("The Rivers API rate limit was exceeded. Please try again later.")
         if response.status_code >= 500:
             raise RiversAPIError(
                 "The Rivers API is temporarily unavailable. Please try again later."
@@ -84,11 +72,7 @@ class RiversClient:
         try:
             payload = response.json()
         except ValueError as exc:
-            raise RiversAPIError(
-                "The Rivers API returned an invalid JSON response."
-            ) from exc
+            raise RiversAPIError("The Rivers API returned an invalid JSON response.") from exc
         if not isinstance(payload, dict):
-            raise RiversAPIError(
-                "The Rivers API returned an unexpected response format."
-            )
+            raise RiversAPIError("The Rivers API returned an unexpected response format.")
         return payload

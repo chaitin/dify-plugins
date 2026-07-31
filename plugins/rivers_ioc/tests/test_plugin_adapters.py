@@ -19,9 +19,7 @@ def test_provider_performs_real_safe_query(monkeypatch):
             calls.append(("ip", ip))
 
     monkeypatch.setattr(provider_module, "RiversClient", FakeClient)
-    provider_module.RiversIOCProvider._validate_credentials(
-        object(), {"api_key": "secret"}
-    )
+    provider_module.RiversIOCProvider._validate_credentials(object(), {"api_key": "secret"})
     assert calls == [("token", "secret"), ("ip", "1.1.1.1")]
 
 
@@ -34,12 +32,8 @@ def test_provider_wraps_only_safe_client_error(monkeypatch):
             raise RiversAPIError("safe authorization error")
 
     monkeypatch.setattr(provider_module, "RiversClient", FakeClient)
-    with pytest.raises(
-        ToolProviderCredentialValidationError, match="safe authorization error"
-    ):
-        provider_module.RiversIOCProvider._validate_credentials(
-            object(), {"api_key": "secret"}
-        )
+    with pytest.raises(ToolProviderCredentialValidationError, match="safe authorization error"):
+        provider_module.RiversIOCProvider._validate_credentials(object(), {"api_key": "secret"})
 
 
 def test_tool_emits_structured_json(monkeypatch):
@@ -61,9 +55,7 @@ def test_tool_emits_structured_json(monkeypatch):
             return ("text", value)
 
     monkeypatch.setattr(tool_module, "RiversClient", FakeClient)
-    messages = list(
-        tool_module.RiversIOCTool._invoke(FakeTool(), {"ip_address": "8.8.8.8"})
-    )
+    messages = list(tool_module.RiversIOCTool._invoke(FakeTool(), {"ip_address": "8.8.8.8"}))
     assert messages == [("json", {"risk": "low"})]
 
 
@@ -82,7 +74,5 @@ def test_tool_emits_safe_error(monkeypatch):
             return value
 
     monkeypatch.setattr(tool_module, "RiversClient", FakeClient)
-    messages = list(
-        tool_module.RiversIOCTool._invoke(FakeTool(), {"ip_address": "8.8.8.8"})
-    )
+    messages = list(tool_module.RiversIOCTool._invoke(FakeTool(), {"ip_address": "8.8.8.8"}))
     assert messages == ["Rivers IOC query failed: request timed out"]

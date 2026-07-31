@@ -7,9 +7,7 @@ from rivers_client import RiversAPIError, RiversClient, normalize_ip
 
 
 def client(handler, token: str = "top-secret-token") -> RiversClient:
-    return RiversClient(
-        token, client=httpx.Client(transport=httpx.MockTransport(handler))
-    )
+    return RiversClient(token, client=httpx.Client(transport=httpx.MockTransport(handler)))
 
 
 @pytest.mark.parametrize(
@@ -46,9 +44,7 @@ def test_success_returns_structured_payload_and_sends_token():
     ],
 )
 def test_http_errors_are_classified_and_do_not_leak_token(status, message):
-    api = client(
-        lambda request: httpx.Response(status, text="top-secret-token upstream detail")
-    )
+    api = client(lambda request: httpx.Response(status, text="top-secret-token upstream detail"))
     with pytest.raises(RiversAPIError, match=message) as caught:
         api.query_ip("8.8.8.8")
     assert "top-secret-token" not in str(caught.value)
