@@ -125,7 +125,7 @@ wheels = [
 
 [[package]]
 name = "dify-plugin"
-version = "0.9.1"
+version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dpkt" },
@@ -142,9 +142,9 @@ dependencies = [
     { name = "werkzeug" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ba/9b/5d78d22aa32942f9d5375f2b0d913b3e529f8456cb91aaf04fa50638b8d5/dify_plugin-0.9.1.tar.gz", hash = "sha256:81f96f9a78ca76b22361eb40c54935bb6cf9b3d0d2be44828d63e0a25e3cb0e8", size = 318876, upload-time = "2026-06-17T03:15:11.773Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2b/fd/1ba9d6dda0363ade4c1aab87e8188550db2ccce204071bc5fcf64d97fef6/dify_plugin-0.10.0.tar.gz", hash = "sha256:1d66f06647b16bc16ba3989fec09808d955a6c7a297f5a572c27288e717fa1aa", size = 319288, upload-time = "2026-07-20T09:34:54.712Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/66/f0/9538bfce0df4e816f28a91c38e762fcf45fc10f4a0751e3bb0f83bcf4f11/dify_plugin-0.9.1-py3-none-any.whl", hash = "sha256:1c45ed4f06ccd9375382c728ebd6b7394da854273f59666c25c0d7b914a0dbf0", size = 376977, upload-time = "2026-06-17T03:15:10.345Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/5b/ac14980502c31aaed011259c5fe698da83af1d384a2d59577d68ca34316a/dify_plugin-0.10.0-py3-none-any.whl", hash = "sha256:b7a4d8acbad153720cac50e3f38a428178f50079fd2599e24db3403cc1a0c8f4", size = 377626, upload-time = "2026-07-20T09:34:53.437Z" },
 ]
 
 [[package]]
@@ -475,16 +475,16 @@ wheels = [
 
 [[package]]
 name = "pytest-cov"
-version = "7.0.0"
+version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coverage" },
     { name = "pluggy" },
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/f7/c933acc76f5208b3b00089573cf6a2bc26dc80a8aece8f52bb7d6b1855ca/pytest_cov-7.0.0.tar.gz", hash = "sha256:33c97eda2e049a0c5298e91f519302a1334c26ac65c1a483d6206fd458361af1", size = 54328, upload-time = "2025-09-09T10:57:02.113Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/51/a849f96e117386044471c8ec2bd6cfebacda285da9525c9106aeb28da671/pytest_cov-7.1.0.tar.gz", hash = "sha256:30674f2b5f6351aa09702a9c8c364f6a01c27aae0c1366ae8016160d1efc56b2", size = 55592, upload-time = "2026-03-21T20:11:16.284Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/49/1377b49de7d0c1ce41292161ea0f721913fa8722c19fb9c1e3aa0367eecb/pytest_cov-7.0.0-py3-none-any.whl", hash = "sha256:3b8e9558b16cc1479da72058bdecf8073661c7f57f7d3c5f22a1c23507f2d861", size = 22424, upload-time = "2025-09-09T10:57:00.695Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/7a/d968e294073affff457b041c2be9868a40c1c71f4a35fcc1e45e5493067b/pytest_cov-7.1.0-py3-none-any.whl", hash = "sha256:a0461110b7865f9a271aa1b51e516c9a95de9d696734a2f71e3e78f46e1d4678", size = 22876, upload-time = "2026-03-21T20:11:14.438Z" },
 ]
 
 [[package]]
@@ -572,14 +572,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dify-plugin", specifier = "==0.9.1" },
+    { name = "dify-plugin", specifier = "==0.10.0" },
     { name = "httpx", specifier = "==0.28.1" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=9.0.3,<10.0.0" },
-    { name = "pytest-cov", specifier = "==7.0.0" },
+    { name = "pytest-cov", specifier = "==7.1.0" },
     { name = "pyyaml", specifier = ">=6.0.2,<7.0.0" },
     { name = "ruff", specifier = ">=0.16.0,<0.17.0" },
 ]

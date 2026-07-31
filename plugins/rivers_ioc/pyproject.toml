@@ -3,14 +3,14 @@ name = "rivers-ioc-development"
 version = "0.2.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "dify-plugin==0.9.1",
+  "dify-plugin==0.10.0",
   "httpx==0.28.1",
 ]
 
 [dependency-groups]
 dev = [
   "pytest>=9.0.3,<10.0.0",
-  "pytest-cov==7.0.0",
+  "pytest-cov==7.1.0",
   "pyyaml>=6.0.2,<7.0.0",
   "ruff>=0.16.0,<0.17.0",
 ]
