@@ -1,0 +1,113 @@
+identity:
+  name: run_agent
+  author: chaitin
+  label:
+    en_US: Run Dynamic Workflow
+    zh_Hans: 运行动态工作流
+description:
+  human:
+    en_US: Select an agent-compose AI coding agent and run it in an isolated sandbox. https://github.com/chaitin/agent-compose
+    zh_Hans: 选择 agent-compose AI 编码智能体并在隔离沙箱中运行。https://github.com/chaitin/agent-compose
+  llm: Run a selected Chaitin agent-compose agent as a dynamic workflow.
+parameters:
+  - name: agent
+    type: dynamic-select
+    form: llm
+    required: true
+    label:
+      en_US: Agent
+      zh_Hans: 智能体
+    human_description:
+      en_US: Agent fetched from Chaitin agent-compose.
+      zh_Hans: 从长亭科技 agent-compose 拉取的智能体。
+    llm_description: Chaitin agent-compose agent to run.
+  - name: query
+    type: string
+    form: llm
+    required: true
+    label:
+      en_US: Query
+      zh_Hans: 查询
+    human_description:
+      en_US: User query passed to the selected agent.
+      zh_Hans: 传递给所选智能体的用户查询。
+    llm_description: User query passed to the selected agent.
+  - name: instruction
+    type: string
+    form: form
+    required: false
+    label:
+      en_US: Instruction
+      zh_Hans: 指令
+    human_description:
+      en_US: Optional extra instruction combined with the query.
+      zh_Hans: 可选的附加指令，会与查询组合。
+    llm_description: Optional extra instruction.
+    template:
+      enabled: true
+  - name: cleanup_policy
+    type: select
+    form: form
+    required: false
+    default: stop_on_completion
+    label:
+      en_US: Sandbox Cleanup
+      zh_Hans: 沙箱清理策略
+    human_description:
+      en_US: Whether agent-compose should keep, stop, or remove the sandbox after completion.
+      zh_Hans: agent-compose 在完成后应保留、停止还是删除沙箱。
+    llm_description: Sandbox cleanup policy.
+    options:
+      - value: stop_on_completion
+        label:
+          en_US: Stop on completion
+          zh_Hans: 完成后停止
+      - value: keep_running
+        label:
+          en_US: Keep running
+          zh_Hans: 保持运行
+      - value: remove_on_completion
+        label:
+          en_US: Remove on completion
+          zh_Hans: 完成后删除
+  - name: output_schema_json
+    type: string
+    form: form
+    required: false
+    label:
+      en_US: Output Schema JSON
+      zh_Hans: 输出 Schema JSON
+    human_description:
+      en_US: Optional JSON Schema passed to agent-compose structured output.
+      zh_Hans: 可选的 JSON Schema，用于 agent-compose 结构化输出。
+    llm_description: Optional JSON Schema for structured output.
+  - name: client_request_id
+    type: string
+    form: form
+    required: false
+    label:
+      en_US: Client Request ID
+      zh_Hans: 客户端请求 ID
+    human_description:
+      en_US: Optional idempotency key. Retries with the same key resolve to the same agent-compose run.
+      zh_Hans: 可选幂等键；使用相同键重试会解析为同一个 agent-compose 运行。
+    llm_description: Optional agent-compose idempotency key.
+extra:
+  python:
+    source: tools/run_agent.py
+output_schema:
+  type: object
+  properties:
+    run_id:
+      type: string
+    sandbox_id:
+      type: string
+      description: agent-compose sandbox id.
+    status:
+      type: string
+    error:
+      type: string
+    warnings:
+      type: array
+      items:
+        type: string

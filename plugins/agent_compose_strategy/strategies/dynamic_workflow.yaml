@@ -1,0 +1,103 @@
+identity:
+  name: dynamic_workflow
+  author: chaitin
+  label:
+    en_US: Dynamic Workflow Strategy
+    zh_Hans: Dynamic Workflow Strategy
+description:
+  en_US: Delegate this Agent node to an agent-compose AI coding agent running in an isolated sandbox. https://github.com/chaitin/agent-compose
+  zh_Hans: 将当前 Agent 节点委托给在隔离沙箱中运行的 agent-compose AI 编码智能体。https://github.com/chaitin/agent-compose
+parameters:
+  - name: agent_compose_url
+    type: string
+    required: false
+    label:
+      en_US: agent-compose URL
+      zh_Hans: agent-compose 地址
+    help:
+      en_US: Base URL of agent-compose. Falls back to the plugin runtime environment when omitted.
+      zh_Hans: agent-compose 基础地址；留空时使用插件运行环境配置。
+  - name: agent_compose_token
+    type: secret-input
+    required: false
+    label:
+      en_US: agent-compose Token
+      zh_Hans: agent-compose Token
+    help:
+      en_US: Bearer token used to authenticate to agent-compose. Falls back to the plugin runtime environment when omitted.
+      zh_Hans: 用于访问 agent-compose 的 Bearer Token；留空时使用插件运行环境配置。
+  - name: agent_compose_timeout_seconds
+    type: number
+    required: false
+    default: 900
+    label:
+      en_US: Timeout (seconds)
+      zh_Hans: 超时时间（秒）
+  - name: agent
+    type: string
+    required: true
+    label:
+      en_US: Agent
+      zh_Hans: 智能体
+    help:
+      en_US: Use project/agent, or a unique agent name.
+      zh_Hans: 填写 project/agent，或唯一的智能体名称。
+  - name: instruction
+    type: string
+    required: false
+    label:
+      en_US: Instruction
+      zh_Hans: 指令
+    template:
+      enabled: true
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: Query
+      zh_Hans: 查询
+  - name: cleanup_policy
+    type: string
+    required: false
+    default: stop_on_completion
+    label:
+      en_US: Sandbox Cleanup
+      zh_Hans: 沙箱清理策略
+    help:
+      en_US: Use keep_running to reuse the sandbox, stop_on_completion to stop it, or remove_on_completion to delete it.
+      zh_Hans: 使用 keep_running 复用沙箱，stop_on_completion 停止沙箱，或 remove_on_completion 删除沙箱。
+  - name: output_schema_json
+    type: string
+    required: false
+    label:
+      en_US: Output Schema JSON
+      zh_Hans: 输出 Schema JSON
+  - name: client_request_id
+    type: string
+    required: false
+    label:
+      en_US: Client Request ID
+      zh_Hans: 客户端请求 ID
+output_schema:
+  type: object
+  properties:
+    run_id:
+      type: string
+      description: agent-compose run id.
+    sandbox_id:
+      type: string
+      description: agent-compose sandbox id.
+    status:
+      type: string
+      description: agent-compose run status.
+    error:
+      type: string
+      description: Final agent-compose error, empty on success.
+    warnings:
+      type: array
+      items:
+        type: string
+      description: Non-fatal warnings returned by agent-compose.
+extra:
+  python:
+    source: strategies/dynamic_workflow.py

@@ -1,0 +1,44 @@
+identity:
+  name: search_capabilities
+  author: chaitin
+  label:
+    en_US: Search OctoBus Capabilities
+    zh_Hans: 搜索 OctoBus 能力
+description:
+  human:
+    en_US: Search dynamic OctoBus capabilities by name, service, method, or description.
+    zh_Hans: 按名称、服务、方法或描述搜索 OctoBus 动态能力。
+  llm: Search OctoBus capabilities before selecting and calling one from an agent workflow.
+parameters:
+  - name: query
+    type: string
+    form: llm
+    required: false
+    label:
+      en_US: Query
+      zh_Hans: 查询
+    human_description:
+      en_US: Keyword query for capability names, descriptions, services, or methods.
+      zh_Hans: 按能力名称、描述、服务或方法搜索。
+    llm_description: Keyword query for capability search.
+  - name: capset_id
+    type: dynamic-select
+    form: llm
+    required: false
+    label:
+      en_US: Capset
+      zh_Hans: Capset
+    human_description:
+      en_US: Optional capset filter.
+      zh_Hans: 可选 capset 过滤条件。
+    llm_description: Optional OctoBus capset id.
+extra:
+  python:
+    source: tools/search_capabilities.py
+output_schema:
+  type: object
+  properties:
+    capabilities:
+      type: array
+    count:
+      type: number

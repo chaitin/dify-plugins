@@ -1,0 +1,22 @@
+identity:
+  name: list_instances
+  author: chaitin
+  label:
+    en_US: List OctoBus Instances
+    zh_Hans: 列出 OctoBus 实例
+description:
+  human:
+    en_US: List running OctoBus service instances for deployment and debugging checks.
+    zh_Hans: 列出运行中的 OctoBus 服务实例，用于部署与调试检查。
+  llm: List OctoBus service instances to debug runtime registration and health.
+parameters: []
+extra:
+  python:
+    source: tools/list_instances.py
+output_schema:
+  type: object
+  properties:
+    instances:
+      type: array
+    count:
+      type: number

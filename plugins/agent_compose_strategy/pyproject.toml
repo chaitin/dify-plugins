@@ -1,0 +1,12 @@
+[project]
+name = "dify-plugin-agent-compose-strategy"
+version = "0.4.3"
+requires-python = ">=3.12"
+dependencies = ["dify_plugin>=0.9.0", "requests>=2.34.2"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint.isort]
+detect-same-package = false

@@ -1,0 +1,70 @@
+identity:
+  name: call_capability
+  author: chaitin
+  label:
+    en_US: Call OctoBus Capability
+    zh_Hans: 调用 OctoBus 能力
+description:
+  human:
+    en_US: Call an OctoBus capability through the selected capset and MCP tool name.
+    zh_Hans: 通过所选 capset 和 MCP 工具名调用 OctoBus 能力。
+  llm: Call an OctoBus capability after progressive discovery and schema inspection.
+parameters:
+  - name: capability
+    type: dynamic-select
+    form: llm
+    required: false
+    label:
+      en_US: Capability
+      zh_Hans: 能力
+    human_description:
+      en_US: Dynamic OctoBus capability. Values include the capset id and tool name.
+      zh_Hans: 动态 OctoBus 能力。选项值包含 capset id 和 tool name。
+    llm_description: Capability selection returned by OctoBus discovery.
+  - name: capset_id
+    type: dynamic-select
+    form: llm
+    required: false
+    label:
+      en_US: Capset
+      zh_Hans: Capset
+    human_description:
+      en_US: Optional capset override when capability is a plain tool name.
+      zh_Hans: 当 capability 只是工具名时，可用此字段指定 capset。
+    llm_description: Optional capset id override.
+  - name: tool_name
+    type: string
+    form: llm
+    required: false
+    label:
+      en_US: Tool Name
+      zh_Hans: 工具名
+    human_description:
+      en_US: Optional raw OctoBus MCP tool name.
+      zh_Hans: 可选的原始 OctoBus MCP 工具名。
+    llm_description: Optional raw OctoBus MCP tool name.
+  - name: arguments_json
+    type: string
+    form: llm
+    required: false
+    label:
+      en_US: Arguments JSON
+      zh_Hans: 参数 JSON
+    human_description:
+      en_US: JSON object passed to OctoBus MCP tools/call.
+      zh_Hans: 传递给 OctoBus MCP tools/call 的 JSON 对象。
+    llm_description: JSON object arguments for the selected capability.
+    template:
+      enabled: true
+extra:
+  python:
+    source: tools/call_capability.py
+output_schema:
+  type: object
+  properties:
+    capset_id:
+      type: string
+    tool_name:
+      type: string
+    result:
+      type: object

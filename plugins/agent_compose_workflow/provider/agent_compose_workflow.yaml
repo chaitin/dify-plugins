@@ -1,0 +1,49 @@
+identity:
+  author: chaitin
+  name: agent_compose_workflow
+  label:
+    en_US: Dynamic Workflow Tool
+    zh_Hans: Dynamic Workflow Tool
+  description:
+    en_US: Discover and run agent-compose agents as Dify tools. agent-compose manages AI coding agents in isolated sandboxes. https://github.com/chaitin/agent-compose
+    zh_Hans: 将 agent-compose 智能体发现并作为 Dify 工具运行；agent-compose 在隔离沙箱中管理 AI 编码智能体。https://github.com/chaitin/agent-compose
+  icon: icon.svg
+  tags:
+    - productivity
+    - utilities
+credentials_for_provider:
+  agent_compose_url:
+    type: text-input
+    required: false
+    label:
+      en_US: agent-compose URL
+      zh_Hans: agent-compose 地址
+    placeholder:
+      en_US: http://localhost:17410
+      zh_Hans: http://localhost:17410
+    help:
+      en_US: Base URL of the Chaitin agent-compose HTTP/Connect service. See https://github.com/chaitin/agent-compose.
+      zh_Hans: 长亭科技 agent-compose HTTP/Connect 服务基础地址。参见 https://github.com/chaitin/agent-compose。
+  agent_compose_token:
+    type: secret-input
+    required: false
+    label:
+      en_US: agent-compose Bearer Token
+      zh_Hans: agent-compose Bearer Token
+    placeholder:
+      en_US: Optional
+      zh_Hans: 可选
+  agent_compose_timeout_seconds:
+    type: text-input
+    required: false
+    label:
+      en_US: Timeout Seconds
+      zh_Hans: 超时时间秒数
+    placeholder:
+      en_US: "900"
+      zh_Hans: "900"
+tools:
+  - tools/run_agent.yaml
+extra:
+  python:
+    source: provider/agent_compose_workflow.py

@@ -1,0 +1,88 @@
+identity:
+  author: chaitin
+  name: octobus
+  label:
+    en_US: OctoBus
+    zh_Hans: OctoBus
+  description:
+    en_US: Discover and call pluggable service capabilities exposed by OctoBus capsets through MCP. https://github.com/chaitin/OctoBus
+    zh_Hans: 在 Dify 中渐进式发现并通过 MCP 调用 OctoBus 能力集开放的可插拔服务能力。https://github.com/chaitin/OctoBus
+  icon: icon.svg
+  tags:
+    - utilities
+    - productivity
+credentials_for_provider:
+  octobus_url:
+    type: text-input
+    required: true
+    label:
+      en_US: OctoBus URL
+      zh_Hans: OctoBus 地址
+    placeholder:
+      en_US: http://octobus:9000
+      zh_Hans: http://octobus:9000
+    help:
+      en_US: Base URL of the OctoBus daemon. Admin APIs and MCP share this URL. See https://github.com/chaitin/OctoBus.
+      zh_Hans: OctoBus daemon 基础地址，Admin API 与 MCP 共用此地址。参见 https://github.com/chaitin/OctoBus。
+  octobus_admin_token:
+    type: secret-input
+    required: false
+    label:
+      en_US: Admin Token
+      zh_Hans: Admin Token
+    placeholder:
+      en_US: Optional admin API bearer token
+      zh_Hans: 可选的 Admin API Bearer Token
+  octobus_capset_token:
+    type: secret-input
+    required: false
+    label:
+      en_US: Default Capset Token
+      zh_Hans: 默认 Capset Token
+    placeholder:
+      en_US: Optional default MCP bearer token
+      zh_Hans: 可选的默认 MCP Bearer Token
+  octobus_capset_tokens_json:
+    type: secret-input
+    required: false
+    label:
+      en_US: Capset Tokens JSON
+      zh_Hans: Capset Token JSON
+    placeholder:
+      en_US: '{"security":"token"}'
+      zh_Hans: '{"security":"token"}'
+  octobus_token:
+    type: secret-input
+    required: false
+    label:
+      en_US: Legacy Bearer Token
+      zh_Hans: 旧版 Bearer Token
+    placeholder:
+      en_US: Optional
+      zh_Hans: 可选
+  octobus_headers_json:
+    type: secret-input
+    required: false
+    label:
+      en_US: Extra Headers JSON
+      zh_Hans: 额外请求头 JSON
+    placeholder:
+      en_US: '{"X-API-Key":"..."}'
+      zh_Hans: '{"X-API-Key":"..."}'
+  octobus_timeout_seconds:
+    type: text-input
+    required: false
+    label:
+      en_US: Timeout Seconds
+      zh_Hans: 超时时间秒数
+    placeholder:
+      en_US: "60"
+      zh_Hans: "60"
+tools:
+  - tools/list_capsets.yaml
+  - tools/describe_capset.yaml
+  - tools/search_capabilities.yaml
+  - tools/call_capability.yaml
+extra:
+  python:
+    source: provider/octobus.py

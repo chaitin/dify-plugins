@@ -1,0 +1,22 @@
+identity:
+  name: list_services
+  author: chaitin
+  label:
+    en_US: List OctoBus Services
+    zh_Hans: 列出 OctoBus 服务
+description:
+  human:
+    en_US: List services registered in OctoBus for deployment and debugging checks.
+    zh_Hans: 列出 OctoBus 中已注册的服务，用于部署与调试检查。
+  llm: List OctoBus services to debug whether capabilities exist below the capset layer.
+parameters: []
+extra:
+  python:
+    source: tools/list_services.py
+output_schema:
+  type: object
+  properties:
+    services:
+      type: array
+    count:
+      type: number
