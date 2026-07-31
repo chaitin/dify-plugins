@@ -1,4 +1,5 @@
 .venv/
+.cache/
 .pytest_cache/
 .ruff_cache/
 .task/
@@ -8,6 +9,7 @@ tests/
 docs/
 Taskfile.yml
 README.zh-CN.md
+CHANGELOG.md
 pyproject.toml
 uv.lock
 scripts/

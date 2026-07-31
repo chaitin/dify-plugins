@@ -2,7 +2,12 @@
 set -euo pipefail
 
 version="${DIFY_PLUGIN_CLI_VERSION:-0.6.3}"
-cache_dir="${DIFY_PLUGIN_CLI_CACHE:-.cache/dify-plugin-cli}"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repository_root="$(cd -- "${script_dir}/.." && pwd)"
+cache_dir="${DIFY_PLUGIN_CLI_CACHE:-${repository_root}/.cache/dify-plugin-cli}"
+if [[ "${cache_dir}" != /* ]]; then
+  cache_dir="${PWD}/${cache_dir}"
+fi
 
 if [[ -n "${DIFY_PLUGIN_CLI:-}" ]]; then
   test -x "${DIFY_PLUGIN_CLI}"
@@ -31,12 +36,14 @@ fi
 target="${cache_dir}/${version}/${asset}"
 if [[ ! -x "${target}" ]]; then
   mkdir -p "$(dirname "${target}")"
-  temporary="${target}.download"
+  temporary="${target}.download.$$"
+  trap 'rm -f "${temporary}"' EXIT
   curl --fail --location --retry 3 --output "${temporary}" \
     "https://github.com/langgenius/dify-plugin-daemon/releases/download/${version}/${asset}"
   printf '%s  %s\n' "${checksum}" "${temporary}" | sha256sum --check --status
   chmod 0755 "${temporary}"
   mv "${temporary}" "${target}"
+  trap - EXIT
 fi
 
-(cd / && printf '%s\n' "$(realpath "${OLDPWD}/${target}")")
+realpath "${target}"

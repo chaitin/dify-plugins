@@ -7,7 +7,7 @@ vars:
 tasks:
   setup:
     desc: Install the locked development environment
-    cmds: [uv sync --frozen]
+    cmds: [uv sync --python 3.12 --frozen]
   lint:
     desc: Lint repository files and every plugin
     cmds:

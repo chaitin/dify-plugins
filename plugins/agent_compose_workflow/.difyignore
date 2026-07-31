@@ -6,7 +6,9 @@ pyproject.toml
 uv.lock
 scripts/
 README.zh-CN.md
+CHANGELOG.md
 .venv/
+.cache/
 .pytest_cache/
 .ruff_cache/
 __pycache__/

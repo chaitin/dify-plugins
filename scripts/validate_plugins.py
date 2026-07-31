@@ -24,6 +24,7 @@ REQUIRED_FILES = (
     "PRIVACY.md",
     "Taskfile.yml",
     "README.md",
+    "CHANGELOG.md",
 )
 PRIVATE_HOST = re.compile(
     r"(?:git\.in\.chaitin\.net|portus\.in\.chaitin\.net|proxy\.in\.chaitin\.net)", re.I
