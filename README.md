@@ -1,48 +1,36 @@
-### 🔍 插件名称：长亭百川云威胁情报查询
+# Chaitin Dify Plugins
 
-#### 📌 插件简介
+[中文文档](README.zh-CN.md)
 
-本插件对接 **长亭科技「百川云威胁情报 SaaS」** 服务，支持通过 API 实时查询 IP 地址的威胁等级、历史攻击行为、地理位置、ASN 信息等多维情报数据，帮助用户快速识别恶意流量、提升安全响应效率。
+Officially maintained Dify plugins from Chaitin. This monorepo publishes independently
+versioned, self-contained plugin packages for Dify 1.15.0 and later.
 
-***
+## Plugins
 
-### 🌐 服务地址
+| Plugin | Form | Description | Documentation |
+| --- | --- | --- | --- |
+| Rivers IOC | Tool | Query threat intelligence from Chaitin Rivers | [Plugin README](plugins/rivers_ioc/README.md) |
+| agent-compose Workflow | Tool | Invoke agent-compose from a Dify workflow | [Plugin README](plugins/agent_compose_workflow/README.md) |
+| agent-compose Strategy | Agent strategy | Use agent-compose in Dify Agent nodes | [Plugin README](plugins/agent_compose_strategy/README.md) |
+| OctoBus | Tool | Discover and invoke OctoBus capabilities | [Plugin README](plugins/octobus/README.md) |
 
-* **百川云平台官网**：https://rivers.chaitin.cn
-* **威胁情报 API 文档**：https://rivers.chaitin.cn/discussion/d1s7b1b1s5rqo4f9178g
+Download attested build artifacts and `SHA256SUMS` from [GitHub Releases](../../releases).
+Install a `.difypkg` through Dify's plugin management interface.
 
-***
+## Development
 
-### ✅ 开通条件
+Install [Task](https://taskfile.dev/) and [uv](https://docs.astral.sh/uv/), then run:
 
-1. 需注册并登录 **长亭百川云账号**（支持手机号或企业邮箱注册）；
-2. 开通 **「百川威胁情报」服务权限**（当前提供免费试用及付费版本，部分功能需订阅 Ultimate 或以上套餐）；
-3. 在 **空间控制台** 中生成具备「百川威胁情报」权限的 Token。
+```shell
+task setup
+task check
+task build
+```
 
-> 💡 注：免费用户可体验基础查询功能，完整行为数据与高频率调用需升级套餐。
+Each directory under `plugins/` is independently testable and packageable. See the
+[development guide](docs/development.md), [contribution guide](CONTRIBUTING.md), and
+[security policy](SECURITY.md).
 
-***
+## License
 
-### 🔑 获取 API Key（Token）步骤
-
-1. 访问 [百川云空间控制台](https://rivers.chaitin.cn/console/space)；
-2. 点击 **「生成 Token」** 按钮；
-3. 在权限选项中 **勾选「百川威胁情报」**；
-4. 复制生成的 Token，填入本插件的 `X-CA-Token` 配置项即可使用。
-
-***
-
-### 📎 支持查询内容（示例）
-
-* IP 威胁等级（安全 / 疑似 / 恶意）
-* 历史攻击行为统计（如 SQL 注入、Web 攻击、后门连接等）
-* 地理位置、ISP、ASN、IP 类型（IDC/家宽等）
-* 近期活动记录与恶意活跃时间
-
-***
-
-### ⚠️ 注意事项
-
-* 请妥善保管 Token，避免泄露；
-* 单个 Token 有调用频率限制，请按需申请或联系客服提升配额；
-* 服务由 **北京长亭科技有限公司** 提供，技术支持请联系：4000-327-707 或百川云客服。
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

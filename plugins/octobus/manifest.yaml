@@ -1,0 +1,34 @@
+version: "0.4.3"
+type: plugin
+author: chaitin
+name: octobus
+label:
+  en_US: OctoBus
+  zh_Hans: OctoBus
+created_at: "2026-07-30T12:34:51.000000000Z"
+icon: icon.svg
+repo: https://github.com/chaitin/OctoBus
+description:
+  en_US: Connect Dify to OctoBus, a single-binary gateway that exposes pluggable service capabilities to agents by capset through MCP. https://github.com/chaitin/OctoBus
+  zh_Hans: 将 Dify 接入 OctoBus——按能力集（capset）通过 MCP 向智能体开放可插拔服务能力的单二进制网关。https://github.com/chaitin/OctoBus
+tags:
+  - agent
+  - utilities
+resource:
+  memory: 268435456
+  permission:
+    tool:
+      enabled: true
+plugins:
+  tools:
+    - provider/octobus.yaml
+meta:
+  version: "0.4.3"
+  minimum_dify_version: "1.15.0"
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main

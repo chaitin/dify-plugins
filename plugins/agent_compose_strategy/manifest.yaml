@@ -1,0 +1,37 @@
+version: "0.4.3"
+type: plugin
+author: chaitin
+name: agent_compose_strategy
+label:
+  en_US: agent-compose Strategy
+  zh_Hans: agent-compose 策略
+created_at: "2026-07-30T12:34:51.000000000Z"
+icon: icon.svg
+repo: https://github.com/chaitin/agent-compose
+description:
+  en_US: Delegate Dify Agent nodes to agent-compose, the daemon and CLI control plane for running AI coding agents in isolated sandboxes. https://github.com/chaitin/agent-compose
+  zh_Hans: 将 Dify Agent 节点委托给 agent-compose——在隔离沙箱中运行 AI 编码智能体的 daemon 与 CLI 控制平面。https://github.com/chaitin/agent-compose
+tags:
+  - agent
+  - productivity
+resource:
+  memory: 268435456
+  permission:
+    storage:
+      enabled: true
+      size: 1048576
+    tool:
+      enabled: true
+plugins:
+  agent_strategies:
+    - provider/dynamic_workflow.yaml
+meta:
+  version: "0.4.3"
+  minimum_dify_version: "1.15.0"
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main

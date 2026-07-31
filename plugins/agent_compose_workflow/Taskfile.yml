@@ -1,0 +1,36 @@
+version: "3"
+
+vars:
+  PYTHON_VERSION: "3.12"
+
+tasks:
+  setup:
+    cmds:
+      - uv sync --python {{.PYTHON_VERSION}} --frozen --all-groups
+  lint:
+    cmds:
+      - uv run --python {{.PYTHON_VERSION}} --frozen ruff check .
+      - uv run --python {{.PYTHON_VERSION}} --frozen ruff format --check .
+  test:
+    cmds: ['uv run --python {{.PYTHON_VERSION}} --frozen pytest -q --cov=client --cov=tools --cov-report=term-missing --cov-fail-under=80 tests']
+  validate:
+    cmds:
+      - test -f manifest.yaml
+      - test -f PRIVACY.md
+      - test -f README.md
+      - test -f README.zh-CN.md
+      - uv run --python {{.PYTHON_VERSION}} --frozen python scripts/build.py --validate-only
+  check:
+    cmds:
+      - task: lint
+      - task: test
+      - task: validate
+  build:
+    deps: [check]
+    cmds:
+      - |
+        DIST_DIR='{{default "dist" .DIST_DIR}}' \
+        DIFY_PLUGIN_CLI='{{default "dify" .DIFY_PLUGIN_CLI}}' \
+        uv run --python {{.PYTHON_VERSION}} --frozen python scripts/build.py
+  clean:
+    cmds: [rm -rf dist .pytest_cache .ruff_cache]

@@ -1,0 +1,41 @@
+version: "3"
+
+vars:
+  DIFY_PLUGIN_CLI: '{{default "dify" .DIFY_PLUGIN_CLI}}'
+  DIST_DIR: '{{default "dist" .DIST_DIR}}'
+
+tasks:
+  setup:
+    desc: Synchronize the locked development environment
+    cmds:
+      - uv sync --frozen --all-groups
+    sources: [pyproject.toml, uv.lock]
+    generates: [.venv/bin/python, .task/checksum/setup]
+  lint:
+    deps: [setup]
+    cmds:
+      - uv run --frozen ruff check .
+      - uv run --frozen ruff format --check .
+  test:
+    deps: [setup]
+    cmds:
+      - PYTHONPATH=. uv run --frozen pytest -q --cov=rivers_client --cov=tools --cov-report=term-missing --cov-fail-under=85
+  validate:
+    deps: [setup]
+    cmds:
+      - PYTHONPATH=. uv run --frozen pytest -q tests/test_manifest.py
+  check:
+    cmds:
+      - task: lint
+      - task: test
+      - task: validate
+  build:
+    deps: [check]
+    cmds:
+      - uv run --frozen python scripts/build_plugin.py --cli '{{.DIFY_PLUGIN_CLI}}' --dist-dir '{{.DIST_DIR}}'
+  package:
+    cmds:
+      - task: build
+  clean:
+    cmds:
+      - rm -rf .venv .pytest_cache .ruff_cache dist

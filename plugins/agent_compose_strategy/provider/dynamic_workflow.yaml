@@ -1,0 +1,15 @@
+identity:
+  author: chaitin
+  name: agent_compose_strategy
+  label:
+    en_US: agent-compose Strategy
+    zh_Hans: agent-compose 策略
+  description:
+    en_US: Run Dify Agent nodes with agent-compose, a daemon and CLI control plane for isolated AI coding agents. https://github.com/chaitin/agent-compose
+    zh_Hans: 使用 agent-compose 运行 Dify Agent 节点；它是面向隔离 AI 编码智能体的 daemon 与 CLI 控制平面。https://github.com/chaitin/agent-compose
+  icon: icon.svg
+strategies:
+  - strategies/dynamic_workflow.yaml
+extra:
+  python:
+    source: provider/dynamic_workflow.py

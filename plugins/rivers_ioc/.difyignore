@@ -1,0 +1,17 @@
+.venv/
+.cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.gitignore
+.task/
+__pycache__/
+dist/
+tests/
+docs/
+Taskfile.yml
+README.zh-CN.md
+CHANGELOG.md
+pyproject.toml
+uv.lock
+scripts/

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="OctoBus">
+  <rect width="64" height="64" rx="12" fill="#111827"/>
+  <path d="M18 22h28v20H18z" fill="#38bdf8"/>
+  <path d="M23 17h18v10H23z" fill="#22c55e"/>
+  <path d="M14 27h8v6h-8zM42 27h8v6h-8zM14 37h8v6h-8zM42 37h8v6h-8z" fill="#e5e7eb"/>
+  <circle cx="26" cy="32" r="3" fill="#111827"/>
+  <circle cx="38" cy="32" r="3" fill="#111827"/>
+  <path d="M27 40h10" stroke="#111827" stroke-width="3" stroke-linecap="round"/>
+</svg>

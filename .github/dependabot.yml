@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      root-development-dependencies:
+        patterns: ['*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /plugins/rivers_ioc
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /plugins/agent_compose_workflow
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /plugins/agent_compose_strategy
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /plugins/octobus
+    schedule:
+      interval: weekly

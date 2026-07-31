@@ -1,0 +1,22 @@
+identity:
+  name: list_capsets
+  author: chaitin
+  label:
+    en_US: List OctoBus Capsets
+    zh_Hans: 列出 OctoBus Capset
+description:
+  human:
+    en_US: List OctoBus capability sets available to Dify agent workflows.
+    zh_Hans: 列出 Dify Agent 工作流可使用的 OctoBus 能力集。
+  llm: List OctoBus capsets before progressively discovering and calling capabilities.
+parameters: []
+extra:
+  python:
+    source: tools/list_capsets.py
+output_schema:
+  type: object
+  properties:
+    capsets:
+      type: array
+    count:
+      type: number

@@ -1,0 +1,26 @@
+identity:
+  name: rivers_ioc
+  author: chaitin
+  label:
+    en_US: Query IP threat intelligence
+    zh_Hans: 查询 IP 威胁情报
+description:
+  human:
+    en_US: Retrieve Rivers threat intelligence for an IPv4 or IPv6 address.
+    zh_Hans: 查询 IPv4 或 IPv6 地址的百川云威胁情报。
+  llm: Retrieve threat level, observed behavior, network, and location intelligence for an IP address.
+parameters:
+  - name: ip_address
+    type: string
+    required: true
+    label:
+      en_US: IP address
+      zh_Hans: IP 地址
+    human_description:
+      en_US: An IPv4 or IPv6 address, for example 8.8.8.8.
+      zh_Hans: IPv4 或 IPv6 地址，例如 8.8.8.8。
+    llm_description: A valid IPv4 or IPv6 address.
+    form: llm
+extra:
+  python:
+    source: tools/rivers_ioc.py

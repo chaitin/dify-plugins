@@ -1,0 +1,35 @@
+identity:
+  name: describe_capset
+  author: chaitin
+  label:
+    en_US: Describe OctoBus Capset
+    zh_Hans: 描述 OctoBus Capset
+description:
+  human:
+    en_US: Describe services, schemas, and callable capabilities in a selected OctoBus capset.
+    zh_Hans: 描述所选 OctoBus capset 中的服务、参数 schema 和可调用能力。
+  llm: Describe an OctoBus capset so an agent can inspect schemas before calling capabilities.
+parameters:
+  - name: capset_id
+    type: dynamic-select
+    form: llm
+    required: true
+    label:
+      en_US: Capset
+      zh_Hans: Capset
+    human_description:
+      en_US: OctoBus capset to inspect.
+      zh_Hans: 要查看的 OctoBus capset。
+    llm_description: OctoBus capset id.
+extra:
+  python:
+    source: tools/describe_capset.py
+output_schema:
+  type: object
+  properties:
+    capset_id:
+      type: string
+    capabilities:
+      type: array
+    catalog:
+      type: object
