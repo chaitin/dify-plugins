@@ -1,0 +1,41 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.8.3', enable-cache: true}
+      - uses: arduino/setup-task@v2
+        with: {version: '3.44.1'}
+      - run: uv sync --frozen
+      - run: task build
+      - run: cd dist && sha256sum ./*.difypkg > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: |
+            dist/*.difypkg
+            dist/SHA256SUMS
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {name: release-packages, path: dist}
+      - uses: actions/attest-build-provenance@v2
+        with: {subject-path: 'dist/*.difypkg'}
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes dist/*

@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible plugin problem
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: input
+    id: plugin
+    attributes: {label: Plugin and version}
+    validations: {required: true}
+  - type: input
+    id: dify
+    attributes: {label: Dify version}
+    validations: {required: true}
+  - type: textarea
+    id: reproduction
+    attributes: {label: Reproduction steps}
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes: {label: Expected behavior}
+    validations: {required: true}

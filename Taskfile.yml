@@ -1,0 +1,57 @@
+version: '3'
+
+vars:
+  PLUGINS:
+    sh: python3 scripts/discover_plugins.py --format names
+
+tasks:
+  setup:
+    desc: Install the locked development environment
+    cmds: [uv sync --frozen]
+  lint:
+    desc: Lint repository files and every plugin
+    cmds:
+      - uv run ruff check scripts tests
+      - uv run ruff format --check scripts tests
+      - for: { var: PLUGINS }
+        task: plugin:lint
+        vars: { PLUGIN: '{{.ITEM}}' }
+  test:
+    desc: Run repository and plugin tests
+    cmds:
+      - uv run pytest
+      - for: { var: PLUGINS }
+        task: plugin:test
+        vars: { PLUGIN: '{{.ITEM}}' }
+  validate:
+    desc: Validate all plugin manifests and repository conventions
+    cmds: [uv run python scripts/validate_plugins.py]
+  build:
+    desc: Build every plugin package
+    deps: [check]
+    cmds:
+      - mkdir -p dist
+      - for: { var: PLUGINS }
+        task: plugin:build
+        vars: { PLUGIN: '{{.ITEM}}' }
+  check:
+    desc: Run all required local quality gates
+    deps: [lint, test, validate]
+  plugin:lint:
+    internal: true
+    dir: plugins/{{.PLUGIN}}
+    cmds: [task lint]
+  plugin:test:
+    internal: true
+    dir: plugins/{{.PLUGIN}}
+    cmds: [task test]
+  plugin:build:
+    internal: true
+    dir: plugins/{{.PLUGIN}}
+    cmds: [task build DIST_DIR=../../dist]
+  clean:
+    cmds:
+      - uv run python -c "import shutil; shutil.rmtree('dist', ignore_errors=True)"
+      - for: { var: PLUGINS }
+        dir: plugins/{{.ITEM}}
+        cmd: task clean
