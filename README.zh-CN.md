@@ -14,6 +14,7 @@
 | OctoBus | 工具 | 发现并调用 OctoBus 能力 | [插件文档](plugins/octobus/README.zh-CN.md) |
 
 请从 [GitHub Releases](../../releases) 下载 `.difypkg` 和 `SHA256SUMS`，并通过 Dify 插件管理界面安装。
+同一 Release 中的所有插件包都会将仓库 SemVer 标签写入为插件版本。
 
 ## 开发
 
