@@ -18,12 +18,12 @@ jobs:
           git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with: {version: '0.8.3', enable-cache: true}
-      - uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2
+      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v2
         with: {version: '3.44.1'}
       - run: uv sync --frozen
       - run: task release VERSION="${GITHUB_REF_NAME}"
       - run: cd dist && sha256sum ./*.difypkg > SHA256SUMS
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-packages
           path: |
