@@ -325,6 +325,15 @@ def cleanup_policy_keeps_sandbox(value: str) -> bool:
     return cleanup_policy_to_proto(value) == "RUN_SANDBOX_CLEANUP_POLICY_KEEP_RUNNING"
 
 
+def cleanup_policy_reuses_sandbox(value: str) -> bool:
+    """Whether a later run may reuse this run's sandbox.
+
+    A stopped sandbox is still resumable when its id is supplied to
+    agent-compose.  Only remove-on-completion makes the id unusable.
+    """
+    return cleanup_policy_to_proto(value) != "RUN_SANDBOX_CLEANUP_POLICY_REMOVE_ON_COMPLETION"
+
+
 def parse_agent_selection(value: str) -> tuple[str, str]:
     try:
         payload = json.loads(value)

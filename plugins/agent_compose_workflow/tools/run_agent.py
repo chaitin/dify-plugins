@@ -11,7 +11,7 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
-    cleanup_policy_keeps_sandbox,
+    cleanup_policy_reuses_sandbox,
     parse_agent_selection,
     remember_agent_compose_sandbox_id,
     resolve_agent_compose_sandbox_id,
@@ -29,9 +29,9 @@ class RunAgentTool(Tool):
         if not query:
             raise AgentComposeError("query is required")
         cleanup_policy = str(tool_parameters.get("cleanup_policy") or "stop_on_completion")
-        keep_sandbox = cleanup_policy_keeps_sandbox(cleanup_policy)
+        reuse_sandbox = cleanup_policy_reuses_sandbox(cleanup_policy)
         sandbox_id = ""
-        if keep_sandbox:
+        if reuse_sandbox:
             sandbox_id = resolve_agent_compose_sandbox_id(
                 explicit_sandbox_id=None,
                 dify_session=self.session,
@@ -80,7 +80,7 @@ class RunAgentTool(Tool):
             )
             raise
 
-        if keep_sandbox:
+        if reuse_sandbox:
             remember_agent_compose_sandbox_id(
                 explicit_sandbox_id=None,
                 dify_session=self.session,

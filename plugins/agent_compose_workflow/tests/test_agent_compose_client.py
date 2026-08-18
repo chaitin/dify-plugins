@@ -605,7 +605,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
     )
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(ValueError("storage must not be used"))
+    session.storage = FakeStorage()
     tool = RunAgentTool(
         runtime=ToolRuntime(
             credentials={"agent_compose_url": base_url, "agent_compose_token": "token"},

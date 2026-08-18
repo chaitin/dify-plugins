@@ -12,7 +12,7 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
-    cleanup_policy_keeps_sandbox,
+    cleanup_policy_reuses_sandbox,
     remember_agent_compose_sandbox_id,
     resolve_agent_compose_sandbox_id,
     resolve_agent_reference,
@@ -45,9 +45,9 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
             )
         )
         project_id, agent_name = resolve_agent_reference(client, params.agent)
-        keep_sandbox = cleanup_policy_keeps_sandbox(params.cleanup_policy)
+        reuse_sandbox = cleanup_policy_reuses_sandbox(params.cleanup_policy)
         sandbox_id = ""
-        if keep_sandbox:
+        if reuse_sandbox:
             sandbox_id = resolve_agent_compose_sandbox_id(
                 explicit_sandbox_id=None,
                 dify_session=self.session,
@@ -94,7 +94,7 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
             )
             raise
 
-        if keep_sandbox:
+        if reuse_sandbox:
             remember_agent_compose_sandbox_id(
                 explicit_sandbox_id=None,
                 dify_session=self.session,
