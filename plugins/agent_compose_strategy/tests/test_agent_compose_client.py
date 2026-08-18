@@ -43,7 +43,7 @@ def test_agent_strategy_does_not_expose_manual_sandbox_id() -> None:
 
 
 @responses.activate
-def test_agent_strategy_stop_mode_skips_storage_and_emits_distinct_outputs() -> None:
+def test_agent_strategy_stop_mode_remembers_sandbox_and_emits_distinct_outputs() -> None:
     base_url = "http://agent-compose.test"
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
@@ -60,7 +60,7 @@ def test_agent_strategy_stop_mode_skips_storage_and_emits_distinct_outputs() -> 
     )
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(ValueError("storage must not be used"))
+    session.storage = FakeStorage()
     strategy = DynamicWorkflowAgentStrategy(
         runtime=AgentRuntime(user_id="user-1"),
         session=session,
@@ -93,6 +93,7 @@ def test_agent_strategy_stop_mode_skips_storage_and_emits_distinct_outputs() -> 
         "warnings": [],
     }
     assert b'"sandboxId"' not in responses.calls[0].request.body
+    assert list(session.storage.values.values()) == [b"sandbox-1"]
 
 
 def test_agent_strategy_accepts_connection_settings() -> None:
@@ -684,7 +685,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
     )
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(ValueError("storage must not be used"))
+    session.storage = FakeStorage()
     tool = RunAgentTool(
         runtime=ToolRuntime(
             credentials={"agent_compose_url": base_url, "agent_compose_token": "token"},

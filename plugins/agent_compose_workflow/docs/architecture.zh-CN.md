@@ -194,13 +194,13 @@ Strategy 目前使用文本填写 Agent 名称，这是因为 Dify 的 Agent Str
 
 沙箱清理策略有三种：
 
-- `stop_on_completion`：任务完成后停止沙箱。当前 Tool 与 Strategy 均默认使用该模式，适合大多数一次性任务。
+- `stop_on_completion`：任务完成后停止沙箱。停止后仍会保存会话到 sandbox id，后续同一 Dify 会话可恢复该 sandbox；适合不希望 runtime 长期运行、但需要多轮对话的任务。
 - `keep_running`：任务完成后保持沙箱运行，适合需要跨轮保留文件、进程或运行状态的会话。
 - `remove_on_completion`：任务完成后删除沙箱，适合不需要保留环境、希望及时释放资源的任务。
 
-当使用 `keep_running` 时，插件会根据 Dify 的 conversation id、project id 和 Agent 名称保存 agent-compose 返回的 sandbox id。后续在同一 Dify 会话中再次调用同一 Agent，便可以自动复用原沙箱；同一会话中的不同 Agent 会使用不同沙箱，避免运行环境串用。
+当使用 `keep_running` 或 `stop_on_completion` 时，插件会根据 Dify 的 conversation id、project id 和 Agent 名称保存 agent-compose 返回的 sandbox id。后续在同一 Dify 会话中再次调用同一 Agent，便可以自动复用原沙箱；同一会话中的不同 Agent 会使用不同沙箱，避免运行环境串用。agent-compose 部署需要保留 stopped runtime 的状态，才能恢复 provider 的原生会话。
 
-非会话型执行如果没有 conversation id，则每次都会创建新沙箱。`stop_on_completion` 和 `remove_on_completion` 也不会读写这份会话存储。插件有意不暴露手工填写 `sandbox_id` 的参数，以减少错误复用运行环境的风险。
+非会话型执行如果没有 conversation id，则每次都会创建新沙箱。`remove_on_completion` 不会读写这份会话存储；插件有意不暴露手工填写 `sandbox_id` 的参数，以减少错误复用运行环境的风险。
 
 简单来说：
 
