@@ -15,6 +15,7 @@ from client.agent_compose import (
     AgentComposeError,
     cleanup_policy_to_proto,
     forget_agent_compose_sandbox_id,
+    agent_compose_sandbox_storage_key,
     parse_agent_selection,
     remember_agent_compose_sandbox_id,
     resolve_agent_compose_sandbox_id,
@@ -417,6 +418,9 @@ class FakeStorage:
     def set(self, key: str, val: bytes) -> None:
         self.values[key] = val
 
+    def delete(self, key: str) -> None:
+        del self.values[key]
+
 
 class FailingStorage:
     def __init__(self, error: Exception) -> None:
@@ -429,6 +433,9 @@ class FailingStorage:
         raise self.error
 
     def set(self, key: str, val: bytes) -> None:
+        raise self.error
+
+    def delete(self, key: str) -> None:
         raise self.error
 
 
@@ -522,6 +529,12 @@ def test_resolve_agent_compose_sandbox_id_reads_stored_agent_scoped_value() -> N
         project_id="project-1",
         agent_name="writer",
     )
+    writer_key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert writer_key not in session.storage.values
     assert (
         resolve_agent_compose_sandbox_id(
             explicit_sandbox_id=None,

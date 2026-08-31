@@ -452,7 +452,9 @@ def forget_agent_compose_sandbox_id(
     if not key:
         return
     try:
-        dify_session.storage.set(key, b"")
+        if not dify_session.storage.exist(key):
+            return
+        dify_session.storage.delete(key)
     except StorageInvocationError:
         return
 
