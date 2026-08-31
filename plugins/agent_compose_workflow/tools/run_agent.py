@@ -177,9 +177,11 @@ def build_prompt(instruction: str | None, query: str, file_paths: list[str] | No
     )
 
 
-def upload_files(client, workspace_id: str, files, session) -> list[str]:  # pragma: no cover
+def upload_files(client, workspace_id: str, files, session) -> list[str]:
     if not files:
         return []
+    if not workspace_id:
+        raise AgentComposeError("workspace_id is required when files are provided")
     if isinstance(files, dict):
         files = [files]
     request_id = (
@@ -187,6 +189,7 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:  # pra
         or uuid.uuid4().hex
     )
     paths = []
+    total = 0
     for index, item in enumerate(files):
         data = item if isinstance(item, dict) else getattr(item, "__dict__", {})
         name = (
@@ -196,16 +199,11 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:  # pra
         content = data.get("content") or getattr(item, "blob", None)
         if isinstance(content, str):
             content = content.encode()
-        url = data.get("url")
-        if content is None and url:
-            import requests
-
-            response = requests.get(str(url), timeout=300)
-            response.raise_for_status()
-            response.raise_for_status()
-            content = response.content
         if not isinstance(content, (bytes, bytearray)):
             raise AgentComposeError(f"unable to read uploaded file {name}")
+        if len(content) > 50 * 1024 * 1024 or total + len(content) > 100 * 1024 * 1024:
+            raise AgentComposeError("uploaded files exceed size limits")
+        total += len(content)
         path = f"inputs/{request_id}/{index}-{name}"
         client.upload_workspace_file(
             workspace_id=workspace_id,
