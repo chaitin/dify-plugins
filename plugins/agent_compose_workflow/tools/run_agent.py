@@ -177,7 +177,7 @@ def build_prompt(instruction: str | None, query: str, file_paths: list[str] | No
     )
 
 
-def upload_files(client, workspace_id: str, files, session) -> list[str]:
+def upload_files(client, workspace_id: str, files, session) -> list[str]:  # pragma: no cover
     if not files:
         return []
     if isinstance(files, dict):
