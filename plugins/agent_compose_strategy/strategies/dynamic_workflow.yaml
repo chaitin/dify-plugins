@@ -56,6 +56,12 @@ parameters:
     label:
       en_US: Query
       zh_Hans: 查询
+  - name: files
+    type: files
+    required: false
+    label:
+      en_US: Files
+      zh_Hans: 文件
   - name: cleanup_policy
     type: string
     required: false
