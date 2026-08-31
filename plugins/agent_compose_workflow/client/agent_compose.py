@@ -194,7 +194,9 @@ class AgentComposeClient:
                             agent.get("displayName") or agent.get("display_name") or ""
                         ).strip(),
                         description=str(agent.get("description") or "").strip(),
-                        workspace_id=str(agent.get("workspaceId") or agent.get("workspace_id") or "").strip(),
+                        workspace_id=str(
+                            agent.get("workspaceId") or agent.get("workspace_id") or ""
+                        ).strip(),
                     )
                 )
         return agents
@@ -232,15 +234,31 @@ class AgentComposeClient:
         body = self._post_json(RUN_AGENT_PROCEDURE, payload)
         return parse_run_agent_response(body)
 
-    def upload_workspace_file(self, *, workspace_id: str, path: str, content: bytes, filename: str, content_type: str = "application/octet-stream") -> None:
+    def upload_workspace_file(
+        self,
+        *,
+        workspace_id: str,
+        path: str,
+        content: bytes,
+        filename: str,
+        content_type: str = "application/octet-stream",
+    ) -> None:
         if not workspace_id.strip():
             raise AgentComposeError("selected agent has no file workspace configured")
-        url = self.config.normalized_base_url() + WORKSPACE_UPLOAD_PATH.format(workspace_id=workspace_id.strip())
+        url = self.config.normalized_base_url() + WORKSPACE_UPLOAD_PATH.format(
+            workspace_id=workspace_id.strip()
+        )
         headers = {"Accept": "application/json"}
         if self.config.bearer_token:
             headers["Authorization"] = f"Bearer {self.config.bearer_token}"
         try:
-            response = requests.post(url, headers=headers, data={"path": path, "upload_type": "file"}, files={"file": (filename, content, content_type)}, timeout=self.config.timeout_seconds)
+            response = requests.post(
+                url,
+                headers=headers,
+                data={"path": path, "upload_type": "file"},
+                files={"file": (filename, content, content_type)},
+                timeout=self.config.timeout_seconds,
+            )
             response.raise_for_status()
         except requests.RequestException as exc:
             raise AgentComposeError(f"agent-compose workspace upload failed: {exc}") from exc
