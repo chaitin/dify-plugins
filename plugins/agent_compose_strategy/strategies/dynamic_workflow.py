@@ -25,6 +25,7 @@ class DynamicWorkflowParams(BaseModel):
     agent_compose_timeout_seconds: int | None = None
     agent: str
     query: str
+    files: list[dict[str, Any]] | None = None
     instruction: str | None = None
     cleanup_policy: str = "stop_on_completion"
     output_schema_json: str | None = None
@@ -34,7 +35,7 @@ class DynamicWorkflowParams(BaseModel):
 class DynamicWorkflowAgentStrategy(AgentStrategy):
     def _invoke(self, parameters: dict[str, Any]) -> Generator[AgentInvokeMessage, None, None]:
         params = DynamicWorkflowParams(**parameters)
-        prompt = build_prompt(params.instruction, params.query)
+        prompt = build_prompt(params.instruction, params.query, [])
         client = AgentComposeClient(
             AgentComposeConfig.from_mapping(
                 {
@@ -140,15 +141,17 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
             raise AgentComposeError(failure_reason)
 
 
-def build_prompt(instruction: str | None, query: str) -> str:
+def build_prompt(instruction: str | None, query: str, file_paths: list[str] | None = None) -> str:
     instruction = (instruction or "").strip()
     query = query.strip()
-    if not instruction:
+    if not instruction and not file_paths:
         return query
-    return json.dumps(
-        {
+    payload = {
             "instruction": instruction,
             "query": query,
-        },
+        }
+    if file_paths:
+        payload["files"] = file_paths
+    return json.dumps(payload,
         ensure_ascii=False,
     )
