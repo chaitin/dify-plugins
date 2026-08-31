@@ -11,9 +11,9 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
+    agent_compose_sandbox_storage_key,
     cleanup_policy_to_proto,
     forget_agent_compose_sandbox_id,
-    agent_compose_sandbox_storage_key,
     parse_agent_selection,
     remember_agent_compose_sandbox_id,
     resolve_agent_compose_sandbox_id,
@@ -653,6 +653,112 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
         "error": "",
         "warnings": [],
     }
+
+
+@responses.activate
+def test_run_agent_tool_remove_mode_clears_stored_sandbox() -> None:
+    base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + RUN_AGENT_PROCEDURE,
+        json={
+            "run": {
+                "summary": {
+                    "runId": "run-1",
+                    "status": "RUN_STATUS_SUCCEEDED",
+                },
+                "output": "done",
+            }
+        },
+    )
+    session = Session.empty_session()
+    session.conversation_id = "conversation-1"
+    session.storage = FakeStorage()
+    remember_agent_compose_sandbox_id(
+        explicit_sandbox_id=None,
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+        agent_compose_sandbox_id="old-sandbox",
+    )
+    tool = RunAgentTool(
+        runtime=ToolRuntime(
+            credentials={"agent_compose_url": base_url},
+            user_id="user-1",
+            session_id="session-1",
+        ),
+        session=session,
+    )
+
+    list(
+        tool.invoke(
+            {
+                "agent": '{"project_id":"project-1","agent_name":"writer"}',
+                "query": "hello",
+                "cleanup_policy": "remove_on_completion",
+            }
+        )
+    )
+
+    assert b'"sandboxId"' not in responses.calls[0].request.body
+    key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert key not in session.storage.values
+
+
+@responses.activate
+def test_run_agent_tool_clears_mapping_when_reused_run_returns_no_sandbox() -> None:
+    base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + RUN_AGENT_PROCEDURE,
+        json={
+            "run": {
+                "summary": {
+                    "runId": "run-1",
+                    "status": "RUN_STATUS_SUCCEEDED",
+                },
+                "output": "done",
+            }
+        },
+    )
+    session = Session.empty_session()
+    session.conversation_id = "conversation-1"
+    session.storage = FakeStorage()
+    remember_agent_compose_sandbox_id(
+        explicit_sandbox_id=None,
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+        agent_compose_sandbox_id="old-sandbox",
+    )
+    tool = RunAgentTool(
+        runtime=ToolRuntime(
+            credentials={"agent_compose_url": base_url},
+            user_id="user-1",
+            session_id="session-1",
+        ),
+        session=session,
+    )
+
+    list(
+        tool.invoke(
+            {
+                "agent": '{"project_id":"project-1","agent_name":"writer"}',
+                "query": "hello",
+                "cleanup_policy": "stop_on_completion",
+            }
+        )
+    )
+
+    assert b'"sandboxId": "old-sandbox"' in responses.calls[0].request.body
+    key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert key not in session.storage.values
 
 
 @responses.activate

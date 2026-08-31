@@ -12,6 +12,7 @@ from client.agent_compose import (
     AgentComposeConfig,
     AgentComposeError,
     cleanup_policy_reuses_sandbox,
+    forget_agent_compose_sandbox_id,
     parse_agent_selection,
     remember_agent_compose_sandbox_id,
     resolve_agent_compose_sandbox_id,
@@ -34,6 +35,12 @@ class RunAgentTool(Tool):
         if reuse_sandbox:
             sandbox_id = resolve_agent_compose_sandbox_id(
                 explicit_sandbox_id=None,
+                dify_session=self.session,
+                project_id=project_id,
+                agent_name=agent_name,
+            )
+        else:
+            forget_agent_compose_sandbox_id(
                 dify_session=self.session,
                 project_id=project_id,
                 agent_name=agent_name,
@@ -81,13 +88,20 @@ class RunAgentTool(Tool):
             raise
 
         if reuse_sandbox:
-            remember_agent_compose_sandbox_id(
-                explicit_sandbox_id=None,
-                dify_session=self.session,
-                project_id=project_id,
-                agent_name=agent_name,
-                agent_compose_sandbox_id=result.sandbox_id,
-            )
+            if result.sandbox_id:
+                remember_agent_compose_sandbox_id(
+                    explicit_sandbox_id=None,
+                    dify_session=self.session,
+                    project_id=project_id,
+                    agent_name=agent_name,
+                    agent_compose_sandbox_id=result.sandbox_id,
+                )
+            else:
+                forget_agent_compose_sandbox_id(
+                    dify_session=self.session,
+                    project_id=project_id,
+                    agent_name=agent_name,
+                )
 
         if result.output:
             yield self.create_text_message(result.output)
