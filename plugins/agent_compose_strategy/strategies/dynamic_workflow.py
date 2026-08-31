@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import uuid
 import time
 from collections.abc import Generator
 from typing import Any
@@ -165,15 +166,17 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:
         return []
     if not workspace_id:
         raise AgentComposeError("workspace_id is required when files are provided")
-    request_id = re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or "")) or "request"
+    request_id = re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or "")) or uuid.uuid4().hex
     paths = []
     for index, item in enumerate(files):
-        name = os.path.basename(str(item.get("filename") or item.get("name") or f"file-{index}"))
+        name = os.path.basename(str(item.get("filename") or item.get("name") or f"file-{index}")) or f"file-{index}"
         content = item.get("content")
         if isinstance(content, str): content = content.encode()
         if content is None and item.get("url"):
             import requests
-            content = requests.get(str(item["url"]), timeout=300).content
+            response = requests.get(str(item["url"]), timeout=300)
+            response.raise_for_status()
+            content = response.content
         if not isinstance(content, (bytes, bytearray)):
             raise AgentComposeError(f"unable to read uploaded file {name}")
         path = f"inputs/{request_id}/{index}-{name}"
