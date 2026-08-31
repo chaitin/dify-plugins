@@ -10,6 +10,7 @@ from dify_plugin.entities.agent import AgentInvokeMessage
 from dify_plugin.entities.tool import ToolInvokeMessage
 from dify_plugin.interfaces.agent import AgentStrategy
 from pydantic import BaseModel
+from dify_plugin.file.file import File
 
 from client.agent_compose import (
     AgentComposeClient,
@@ -28,7 +29,7 @@ class DynamicWorkflowParams(BaseModel):
     agent_compose_timeout_seconds: int | None = None
     agent: str
     query: str
-    files: list[dict[str, Any]] | None = None
+    files: list[File] | None = None
     workspace_id: str | None = None
     instruction: str | None = None
     cleanup_policy: str = "stop_on_completion"
@@ -168,6 +169,7 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:
         raise AgentComposeError("workspace_id is required when files are provided")
     request_id = re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or "")) or uuid.uuid4().hex
     paths = []
+    total = 0
     for index, item in enumerate(files):
         data = item if isinstance(item, dict) else getattr(item, "__dict__", {})
         name = os.path.basename(str(data.get("filename") or data.get("name") or f"file-{index}")) or f"file-{index}"
@@ -180,6 +182,9 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:
             content = response.content
         if not isinstance(content, (bytes, bytearray)):
             raise AgentComposeError(f"unable to read uploaded file {name}")
+        if len(content) > 50 * 1024 * 1024 or total + len(content) > 100 * 1024 * 1024:
+            raise AgentComposeError("uploaded files exceed size limits")
+        total += len(content)
         path = f"inputs/{request_id}/{index}-{name}"
         client.upload_workspace_file(workspace_id=workspace_id, path=path, content=bytes(content), filename=name, content_type=str(item.get("mime_type") or "application/octet-stream"))
         paths.append(path)
