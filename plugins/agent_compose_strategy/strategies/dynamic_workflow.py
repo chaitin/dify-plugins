@@ -1,4 +1,6 @@
 import json
+import os
+import re
 import time
 from collections.abc import Generator
 from typing import Any
@@ -26,6 +28,7 @@ class DynamicWorkflowParams(BaseModel):
     agent: str
     query: str
     files: list[dict[str, Any]] | None = None
+    workspace_id: str | None = None
     instruction: str | None = None
     cleanup_policy: str = "stop_on_completion"
     output_schema_json: str | None = None
@@ -35,7 +38,6 @@ class DynamicWorkflowParams(BaseModel):
 class DynamicWorkflowAgentStrategy(AgentStrategy):
     def _invoke(self, parameters: dict[str, Any]) -> Generator[AgentInvokeMessage, None, None]:
         params = DynamicWorkflowParams(**parameters)
-        prompt = build_prompt(params.instruction, params.query, [])
         client = AgentComposeClient(
             AgentComposeConfig.from_mapping(
                 {
@@ -45,6 +47,8 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
                 }
             )
         )
+        file_paths = upload_files(client, params.workspace_id or "", params.files, self.session)
+        prompt = build_prompt(params.instruction, params.query, file_paths)
         project_id, agent_name = resolve_agent_reference(client, params.agent)
         reuse_sandbox = cleanup_policy_reuses_sandbox(params.cleanup_policy)
         sandbox_id = ""
@@ -155,3 +159,24 @@ def build_prompt(instruction: str | None, query: str, file_paths: list[str] | No
     return json.dumps(payload,
         ensure_ascii=False,
     )
+
+def upload_files(client, workspace_id: str, files, session) -> list[str]:
+    if not files:
+        return []
+    if not workspace_id:
+        raise AgentComposeError("workspace_id is required when files are provided")
+    request_id = re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or "")) or "request"
+    paths = []
+    for index, item in enumerate(files):
+        name = os.path.basename(str(item.get("filename") or item.get("name") or f"file-{index}"))
+        content = item.get("content")
+        if isinstance(content, str): content = content.encode()
+        if content is None and item.get("url"):
+            import requests
+            content = requests.get(str(item["url"]), timeout=300).content
+        if not isinstance(content, (bytes, bytearray)):
+            raise AgentComposeError(f"unable to read uploaded file {name}")
+        path = f"inputs/{request_id}/{index}-{name}"
+        client.upload_workspace_file(workspace_id=workspace_id, path=path, content=bytes(content), filename=name, content_type=str(item.get("mime_type") or "application/octet-stream"))
+        paths.append(path)
+    return paths
