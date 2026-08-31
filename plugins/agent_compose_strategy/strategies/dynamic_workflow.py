@@ -1,16 +1,16 @@
 import json
 import os
 import re
-import uuid
 import time
+import uuid
 from collections.abc import Generator
 from typing import Any
 
 from dify_plugin.entities.agent import AgentInvokeMessage
 from dify_plugin.entities.tool import ToolInvokeMessage
+from dify_plugin.file.file import File
 from dify_plugin.interfaces.agent import AgentStrategy
 from pydantic import BaseModel
-from dify_plugin.file.file import File
 
 from client.agent_compose import (
     AgentComposeClient,
