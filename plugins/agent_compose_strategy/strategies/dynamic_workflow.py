@@ -169,12 +169,13 @@ def upload_files(client, workspace_id: str, files, session) -> list[str]:
     request_id = re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or "")) or uuid.uuid4().hex
     paths = []
     for index, item in enumerate(files):
-        name = os.path.basename(str(item.get("filename") or item.get("name") or f"file-{index}")) or f"file-{index}"
-        content = item.get("content")
+        data = item if isinstance(item, dict) else getattr(item, "__dict__", {})
+        name = os.path.basename(str(data.get("filename") or data.get("name") or f"file-{index}")) or f"file-{index}"
+        content = data.get("content") or getattr(item, "blob", None)
         if isinstance(content, str): content = content.encode()
-        if content is None and item.get("url"):
+        if content is None and data.get("url"):
             import requests
-            response = requests.get(str(item["url"]), timeout=300)
+            response = requests.get(str(data["url"]), timeout=300)
             response.raise_for_status()
             content = response.content
         if not isinstance(content, (bytes, bytearray)):
