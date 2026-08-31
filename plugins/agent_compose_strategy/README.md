@@ -21,3 +21,7 @@ Install the versioned `.difypkg`, select **agent-compose Strategy** in an Agent 
 With `keep_running`, the strategy remembers an agent-scoped sandbox for the Dify conversation and can reuse it on later turns. Stop and remove policies avoid retaining sandbox state. Every invocation emits text, JSON, and separate structured run variables.
 
 See [configuration and usage](docs/usage.md) and the [architecture introduction](docs/architecture.zh-CN.md). This project is licensed under Apache-2.0; see the repository-level license.
+
+## File uploads
+
+Configure workspace_id to enable uploaded files.

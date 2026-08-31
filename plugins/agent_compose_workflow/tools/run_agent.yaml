@@ -43,6 +43,13 @@ parameters:
       en_US: Optional files uploaded to the selected agent workspace.
       zh_Hans: 上传到所选智能体工作区的可选文件。
     llm_description: Files for the agent to inspect.
+  - name: workspace_id
+    type: string
+    form: form
+    required: false
+    label:
+      en_US: Workspace ID
+      zh_Hans: 工作区 ID
   - name: instruction
     type: string
     form: form

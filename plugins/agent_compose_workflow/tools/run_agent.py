@@ -57,7 +57,7 @@ class RunAgentTool(Tool):
         yield run_log
 
         client = AgentComposeClient(AgentComposeConfig.from_mapping(self.runtime.credentials))
-        file_paths = upload_files(client, selection.get("workspace_id", ""), tool_parameters.get("files"), self.session)
+        file_paths = upload_files(client, str(tool_parameters.get("workspace_id") or selection.get("workspace_id", "")), tool_parameters.get("files"), self.session)
         prompt = build_prompt(instruction, query, file_paths)
         try:
             result = client.run_agent(
