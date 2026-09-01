@@ -19,7 +19,7 @@ resource:
   permission:
     storage:
       enabled: true
-      size: 1048576
+      size: 10485760
     tool:
       enabled: true
 plugins:

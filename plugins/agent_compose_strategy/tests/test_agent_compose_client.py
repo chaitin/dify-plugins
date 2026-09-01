@@ -13,6 +13,7 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
+    agent_compose_sandbox_storage_key,
     cleanup_policy_to_proto,
     forget_agent_compose_sandbox_id,
     parse_agent_selection,
@@ -94,6 +95,106 @@ def test_agent_strategy_stop_mode_remembers_sandbox_and_emits_distinct_outputs()
     }
     assert b'"sandboxId"' not in responses.calls[0].request.body
     assert list(session.storage.values.values()) == [b"sandbox-1"]
+
+
+@responses.activate
+def test_agent_strategy_remove_mode_clears_stored_sandbox() -> None:
+    base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + RUN_AGENT_PROCEDURE,
+        json={
+            "run": {
+                "summary": {
+                    "runId": "run-1",
+                    "status": "RUN_STATUS_SUCCEEDED",
+                },
+                "output": "done",
+            }
+        },
+    )
+    session = Session.empty_session()
+    session.conversation_id = "conversation-1"
+    session.storage = FakeStorage()
+    remember_agent_compose_sandbox_id(
+        explicit_sandbox_id=None,
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+        agent_compose_sandbox_id="old-sandbox",
+    )
+    strategy = DynamicWorkflowAgentStrategy(
+        runtime=AgentRuntime(user_id="user-1"),
+        session=session,
+    )
+
+    list(
+        strategy._invoke(
+            {
+                "agent_compose_url": base_url,
+                "agent": '{"project_id":"project-1","agent_name":"writer"}',
+                "query": "hello",
+                "cleanup_policy": "remove_on_completion",
+            }
+        )
+    )
+
+    assert b'"sandboxId"' not in responses.calls[0].request.body
+    key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert key not in session.storage.values
+
+
+@responses.activate
+def test_agent_strategy_clears_mapping_when_reused_run_returns_no_sandbox() -> None:
+    base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + RUN_AGENT_PROCEDURE,
+        json={
+            "run": {
+                "summary": {
+                    "runId": "run-1",
+                    "status": "RUN_STATUS_SUCCEEDED",
+                },
+                "output": "done",
+            }
+        },
+    )
+    session = Session.empty_session()
+    session.conversation_id = "conversation-1"
+    session.storage = FakeStorage()
+    remember_agent_compose_sandbox_id(
+        explicit_sandbox_id=None,
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+        agent_compose_sandbox_id="old-sandbox",
+    )
+    strategy = DynamicWorkflowAgentStrategy(
+        runtime=AgentRuntime(user_id="user-1"),
+        session=session,
+    )
+
+    list(
+        strategy._invoke(
+            {
+                "agent_compose_url": base_url,
+                "agent": '{"project_id":"project-1","agent_name":"writer"}',
+                "query": "hello",
+                "cleanup_policy": "stop_on_completion",
+            }
+        )
+    )
+
+    assert b'"sandboxId": "old-sandbox"' in responses.calls[0].request.body
+    key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert key not in session.storage.values
 
 
 def test_agent_strategy_accepts_connection_settings() -> None:
@@ -417,6 +518,9 @@ class FakeStorage:
     def set(self, key: str, val: bytes) -> None:
         self.values[key] = val
 
+    def delete(self, key: str) -> None:
+        del self.values[key]
+
 
 class FailingStorage:
     def __init__(self, error: Exception) -> None:
@@ -429,6 +533,9 @@ class FailingStorage:
         raise self.error
 
     def set(self, key: str, val: bytes) -> None:
+        raise self.error
+
+    def delete(self, key: str) -> None:
         raise self.error
 
 
@@ -522,6 +629,12 @@ def test_resolve_agent_compose_sandbox_id_reads_stored_agent_scoped_value() -> N
         project_id="project-1",
         agent_name="writer",
     )
+    writer_key = agent_compose_sandbox_storage_key(
+        dify_session=session,
+        project_id="project-1",
+        agent_name="writer",
+    )
+    assert writer_key not in session.storage.values
     assert (
         resolve_agent_compose_sandbox_id(
             explicit_sandbox_id=None,

@@ -200,7 +200,9 @@ Strategy 目前使用文本填写 Agent 名称，这是因为 Dify 的 Agent Str
 
 当使用 `keep_running` 或 `stop_on_completion` 时，插件会根据 Dify 的 conversation id、project id 和 Agent 名称保存 agent-compose 返回的 sandbox id。后续在同一 Dify 会话中再次调用同一 Agent，便可以自动复用原沙箱；同一会话中的不同 Agent 会使用不同沙箱，避免运行环境串用。agent-compose 部署需要保留 stopped runtime 的状态，才能恢复 provider 的原生会话。
 
-非会话型执行如果没有 conversation id，则每次都会创建新沙箱。`remove_on_completion` 不会读写这份会话存储；插件有意不暴露手工填写 `sandbox_id` 的参数，以减少错误复用运行环境的风险。
+使用 `remove_on_completion` 时，插件会在发起 agent-compose 请求前删除同一 conversation id、project id 和 Agent 名称对应的历史 sandbox 映射，并且不会把旧 sandbox id 传给 agent-compose。复用模式如果响应没有返回新的 sandbox id，也会删除原有映射，避免后续请求继续尝试恢复已失效的沙箱。
+
+非会话型执行如果没有 conversation id，则每次都会创建新沙箱。`remove_on_completion` 不会读写这份会话存储；插件有意不暴露手工填写 `sandbox_id` 的参数，以减少错误复用运行环境的风险。旧版本已经写入的空值 storage key 不会由本次代码升级自动回收，需要由部署维护者通过受支持的 Dify/Plugin Daemon 运维方式单独清理。复用模式仍会按会话、项目和 Agent 组合保存映射，长期容量需要结合会话生命周期、TTL 或运维策略管理。
 
 简单来说：
 
