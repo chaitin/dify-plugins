@@ -1,5 +1,8 @@
 import json
+import os
+import re
 import time
+import uuid
 from collections.abc import Generator
 from typing import Any
 
@@ -25,6 +28,7 @@ class RunAgentTool(Tool):
         tool_parameters: dict[str, Any],
     ) -> Generator[ToolInvokeMessage, None, None]:
         project_id, agent_name = parse_agent_selection(str(tool_parameters.get("agent") or ""))
+        selection = json.loads(str(tool_parameters.get("agent") or "{}"))
         query = str(tool_parameters.get("query") or "").strip()
         instruction = str(tool_parameters.get("instruction") or "").strip()
         if not query:
@@ -60,13 +64,19 @@ class RunAgentTool(Tool):
         )
         yield run_log
 
+        client = AgentComposeClient(AgentComposeConfig.from_mapping(self.runtime.credentials))
+        file_paths = upload_files(
+            client,
+            str(tool_parameters.get("workspace_id") or selection.get("workspace_id", "")),
+            tool_parameters.get("files"),
+            self.session,
+        )
+        prompt = build_prompt(instruction, query, file_paths)
         try:
-            result = AgentComposeClient(
-                AgentComposeConfig.from_mapping(self.runtime.credentials)
-            ).run_agent(
+            result = client.run_agent(
                 project_id=project_id,
                 agent_name=agent_name,
-                prompt=build_prompt(instruction, query),
+                prompt=prompt,
                 sandbox_id=sandbox_id,
                 cleanup_policy=cleanup_policy,
                 output_schema_json=str(tool_parameters.get("output_schema_json") or ""),
@@ -167,12 +177,56 @@ def agent_option_label(project_name: str, agent_name: str, display_name: str = "
     return f"{project_name}/{agent_label}" if project_name else agent_label
 
 
-def build_prompt(instruction: str | None, query: str) -> str:
+def build_prompt(instruction: str | None, query: str, file_paths: list[str] | None = None) -> str:
     instruction = (instruction or "").strip()
     query = query.strip()
-    if not instruction:
+    if not instruction and not file_paths:
         return query
+    payload = {"instruction": instruction, "query": query}
+    if file_paths:
+        payload["files"] = file_paths
     return json.dumps(
-        {"instruction": instruction, "query": query},
+        payload,
         ensure_ascii=False,
     )
+
+
+def upload_files(client, workspace_id: str, files, session) -> list[str]:
+    if not files:
+        return []
+    if not workspace_id:
+        raise AgentComposeError("workspace_id is required when files are provided")
+    if isinstance(files, dict):
+        files = [files]
+    request_id = (
+        re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or ""))
+        or uuid.uuid4().hex
+    )
+    paths = []
+    total = 0
+    for index, item in enumerate(files):
+        data = item if isinstance(item, dict) else getattr(item, "__dict__", {})
+        name = (
+            os.path.basename(str(data.get("filename") or data.get("name") or f"file-{index}"))
+            or f"file-{index}"
+        )
+        content = data.get("content") or getattr(item, "blob", None)
+        if isinstance(content, str):
+            content = content.encode()
+        if not isinstance(content, (bytes, bytearray)):
+            raise AgentComposeError(f"unable to read uploaded file {name}")
+        if len(content) > 50 * 1024 * 1024 or total + len(content) > 100 * 1024 * 1024:
+            raise AgentComposeError("uploaded files exceed size limits")
+        total += len(content)
+        path = f"inputs/{request_id}/{index}-{name}"
+        client.upload_workspace_file(
+            workspace_id=workspace_id,
+            path=path,
+            content=bytes(content),
+            filename=name,
+            content_type=str(
+                data.get("mime_type") or data.get("mimeType") or "application/octet-stream"
+            ),
+        )
+        paths.append(path)
+    return paths
