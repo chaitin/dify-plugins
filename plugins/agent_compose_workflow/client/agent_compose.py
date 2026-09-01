@@ -13,6 +13,7 @@ from dify_plugin.invocations.storage import StorageInvocationError
 GET_PROJECT_PROCEDURE = "/agentcompose.v2.ProjectService/GetProject"
 LIST_PROJECTS_PROCEDURE = "/agentcompose.v2.ProjectService/ListProjects"
 RUN_AGENT_PROCEDURE = "/agentcompose.v2.RunService/RunAgent"
+WORKSPACE_UPLOAD_PATH = "/api/agent-compose/workspaces/{workspace_id}/upload"
 MAX_TIMEOUT_SECONDS = 3600
 
 
@@ -130,6 +131,7 @@ class AgentComposeAgent:
     driver: str = ""
     display_name: str = ""
     description: str = ""
+    workspace_id: str = ""
 
     def selection_value(self) -> str:
         return json.dumps(
@@ -137,6 +139,7 @@ class AgentComposeAgent:
                 "project_id": self.project_id,
                 "project_name": self.project_name,
                 "agent_name": self.agent_name,
+                "workspace_id": self.workspace_id,
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -191,6 +194,9 @@ class AgentComposeClient:
                             agent.get("displayName") or agent.get("display_name") or ""
                         ).strip(),
                         description=str(agent.get("description") or "").strip(),
+                        workspace_id=str(
+                            agent.get("workspaceId") or agent.get("workspace_id") or ""
+                        ).strip(),
                     )
                 )
         return agents
@@ -227,6 +233,35 @@ class AgentComposeClient:
 
         body = self._post_json(RUN_AGENT_PROCEDURE, payload)
         return parse_run_agent_response(body)
+
+    def upload_workspace_file(
+        self,
+        *,
+        workspace_id: str,
+        path: str,
+        content: bytes,
+        filename: str,
+        content_type: str = "application/octet-stream",
+    ) -> None:
+        if not workspace_id.strip():
+            raise AgentComposeError("selected agent has no file workspace configured")
+        url = self.config.normalized_base_url() + WORKSPACE_UPLOAD_PATH.format(
+            workspace_id=workspace_id.strip()
+        )
+        headers = {"Accept": "application/json"}
+        if self.config.bearer_token:
+            headers["Authorization"] = f"Bearer {self.config.bearer_token}"
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                data={"path": path, "upload_type": "file"},
+                files={"file": (filename, content, content_type)},
+                timeout=self.config.timeout_seconds,
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise AgentComposeError(f"agent-compose workspace upload failed: {exc}") from exc
 
     def validate_connection(self) -> None:
         """Validate URL, authentication, and the frozen v2 Project API."""

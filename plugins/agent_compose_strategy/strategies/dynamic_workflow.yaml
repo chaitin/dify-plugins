@@ -56,6 +56,18 @@ parameters:
     label:
       en_US: Query
       zh_Hans: 查询
+  - name: files
+    type: files
+    required: false
+    label:
+      en_US: Files
+      zh_Hans: 文件
+  - name: workspace_id
+    type: string
+    required: false
+    label:
+      en_US: Workspace ID
+      zh_Hans: 工作区 ID
   - name: cleanup_policy
     type: string
     required: false

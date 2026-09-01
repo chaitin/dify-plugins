@@ -4,3 +4,5 @@
 
 - Published the verified agent-compose Workflow Tool implementation as
   `agent_compose_workflow` in the Chaitin plugin monorepo.
+
+- Files use Dify SDK File.blob, filename, and mime_type fields.
