@@ -131,6 +131,7 @@ class AgentComposeAgent:
     driver: str = ""
     display_name: str = ""
     description: str = ""
+    workspace_id: str = ""
 
     def selection_value(self) -> str:
         return json.dumps(
@@ -138,6 +139,7 @@ class AgentComposeAgent:
                 "project_id": self.project_id,
                 "project_name": self.project_name,
                 "agent_name": self.agent_name,
+                "workspace_id": self.workspace_id,
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -192,6 +194,9 @@ class AgentComposeClient:
                             agent.get("displayName") or agent.get("display_name") or ""
                         ).strip(),
                         description=str(agent.get("description") or "").strip(),
+                        workspace_id=str(
+                            agent.get("workspaceId") or agent.get("workspace_id") or ""
+                        ).strip(),
                     )
                 )
         return agents
