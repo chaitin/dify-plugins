@@ -1,5 +1,7 @@
 # agent-compose Strategy
 
+要求使用 agent-compose `v2609.1.0` 或更高版本；插件通过 run label 关联会话以实现多轮对话连续性。
+
 [English](README.md)
 
 这是一个 Dify Agent Strategy 插件，可将 Agent 节点执行委托给 [agent-compose](https://github.com/chaitin/agent-compose)，并支持隔离沙箱生命周期管理及结构化运行信息。

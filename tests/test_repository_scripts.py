@@ -39,6 +39,23 @@ def test_agent_compose_clients_do_not_drift() -> None:
     assert workflow.read_bytes() == strategy.read_bytes()
 
 
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "plugins/agent_compose_strategy/strategies/dynamic_workflow.yaml",
+        "plugins/agent_compose_workflow/tools/run_agent.yaml",
+    ],
+)
+def test_agent_compose_query_uses_single_line_string_input(declaration: str) -> None:
+    root = Path(__file__).resolve().parents[1]
+    definition = yaml.safe_load((root / declaration).read_text(encoding="utf-8"))
+    query = next(
+        parameter for parameter in definition["parameters"] if parameter["name"] == "query"
+    )
+
+    assert query["type"] == "string"
+
+
 def test_release_build_uses_version_without_modifying_sources(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
     original_manifests = {

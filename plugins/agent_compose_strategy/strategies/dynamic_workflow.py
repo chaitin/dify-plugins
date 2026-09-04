@@ -16,10 +16,7 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
-    cleanup_policy_reuses_sandbox,
-    forget_agent_compose_sandbox_id,
-    remember_agent_compose_sandbox_id,
-    resolve_agent_compose_sandbox_id,
+    conversation_labels,
     resolve_agent_reference,
 )
 
@@ -53,21 +50,7 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
         file_paths = upload_files(client, params.workspace_id or "", params.files, self.session)
         prompt = build_prompt(params.instruction, params.query, file_paths)
         project_id, agent_name = resolve_agent_reference(client, params.agent)
-        reuse_sandbox = cleanup_policy_reuses_sandbox(params.cleanup_policy)
         sandbox_id = ""
-        if reuse_sandbox:
-            sandbox_id = resolve_agent_compose_sandbox_id(
-                explicit_sandbox_id=None,
-                dify_session=self.session,
-                project_id=project_id,
-                agent_name=agent_name,
-            )
-        else:
-            forget_agent_compose_sandbox_id(
-                dify_session=self.session,
-                project_id=project_id,
-                agent_name=agent_name,
-            )
 
         started_at = time.perf_counter()
         run_log = self.create_log_message(
@@ -92,6 +75,7 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
                 cleanup_policy=params.cleanup_policy,
                 output_schema_json=params.output_schema_json or "",
                 client_request_id=params.client_request_id or "",
+                labels=conversation_labels(self.session),
             )
         except AgentComposeError as exc:
             yield self.finish_log_message(
@@ -107,22 +91,6 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
                 error=str(exc),
             )
             raise
-
-        if reuse_sandbox:
-            if result.sandbox_id:
-                remember_agent_compose_sandbox_id(
-                    explicit_sandbox_id=None,
-                    dify_session=self.session,
-                    project_id=project_id,
-                    agent_name=agent_name,
-                    agent_compose_sandbox_id=result.sandbox_id,
-                )
-            else:
-                forget_agent_compose_sandbox_id(
-                    dify_session=self.session,
-                    project_id=project_id,
-                    agent_name=agent_name,
-                )
 
         if result.output:
             yield self.create_text_message(result.output)

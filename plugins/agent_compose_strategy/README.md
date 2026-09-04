@@ -1,5 +1,7 @@
 # agent-compose Strategy
 
+Requires agent-compose release v2609.1.0 or later (run labels are used for conversation continuity).
+
 [中文文档](README.zh-CN.md)
 
 A Dify Agent Strategy plugin that delegates Agent node execution to [agent-compose](https://github.com/chaitin/agent-compose), including isolated sandbox lifecycle management and structured run metadata.

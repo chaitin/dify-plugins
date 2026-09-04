@@ -14,11 +14,8 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
-    cleanup_policy_reuses_sandbox,
-    forget_agent_compose_sandbox_id,
+    conversation_labels,
     parse_agent_selection,
-    remember_agent_compose_sandbox_id,
-    resolve_agent_compose_sandbox_id,
 )
 
 
@@ -34,22 +31,7 @@ class RunAgentTool(Tool):
         if not query:
             raise AgentComposeError("query is required")
         cleanup_policy = str(tool_parameters.get("cleanup_policy") or "stop_on_completion")
-        reuse_sandbox = cleanup_policy_reuses_sandbox(cleanup_policy)
         sandbox_id = ""
-        if reuse_sandbox:
-            sandbox_id = resolve_agent_compose_sandbox_id(
-                explicit_sandbox_id=None,
-                dify_session=self.session,
-                project_id=project_id,
-                agent_name=agent_name,
-            )
-        else:
-            forget_agent_compose_sandbox_id(
-                dify_session=self.session,
-                project_id=project_id,
-                agent_name=agent_name,
-            )
-
         started_at = time.perf_counter()
         run_log = self.create_log_message(
             label="agent-compose run",
@@ -81,6 +63,7 @@ class RunAgentTool(Tool):
                 cleanup_policy=cleanup_policy,
                 output_schema_json=str(tool_parameters.get("output_schema_json") or ""),
                 client_request_id=str(tool_parameters.get("client_request_id") or ""),
+                labels=conversation_labels(self.session),
             )
         except AgentComposeError as exc:
             yield self.finish_log_message(
@@ -96,22 +79,6 @@ class RunAgentTool(Tool):
                 error=str(exc),
             )
             raise
-
-        if reuse_sandbox:
-            if result.sandbox_id:
-                remember_agent_compose_sandbox_id(
-                    explicit_sandbox_id=None,
-                    dify_session=self.session,
-                    project_id=project_id,
-                    agent_name=agent_name,
-                    agent_compose_sandbox_id=result.sandbox_id,
-                )
-            else:
-                forget_agent_compose_sandbox_id(
-                    dify_session=self.session,
-                    project_id=project_id,
-                    agent_name=agent_name,
-                )
 
         if result.output:
             yield self.create_text_message(result.output)

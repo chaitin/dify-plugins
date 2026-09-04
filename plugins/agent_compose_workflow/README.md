@@ -1,5 +1,7 @@
 # agent-compose Workflow
 
+Requires agent-compose release v2609.1.0 or later (run labels are used for conversation continuity).
+
 [中文文档](README.zh-CN.md)
 
 A Dify Tool plugin that discovers and runs [agent-compose](https://github.com/chaitin/agent-compose) agents from Workflow Tool nodes. Each run is executed in an isolated sandbox managed by agent-compose.

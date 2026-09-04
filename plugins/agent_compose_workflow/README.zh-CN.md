@@ -1,5 +1,7 @@
 # agent-compose Workflow
 
+要求使用 agent-compose `v2609.1.0` 或更高版本；插件通过 run label 关联会话以实现多轮对话连续性。
+
 [English](README.md)
 
 这是一个 Dify Tool 插件，可在 Workflow 的 Tool 节点中发现并运行 [agent-compose](https://github.com/chaitin/agent-compose) 智能体。每次运行均由 agent-compose 在隔离沙箱中执行。
