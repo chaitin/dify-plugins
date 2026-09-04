@@ -24,8 +24,6 @@ The tool accepts an agent, query, optional instruction, cleanup policy, optional
 
 Choose `stop_on_completion` for ordinary one-shot work, `keep_running` when a later request should reuse the sandbox, or `remove_on_completion` when the workspace must be discarded.
 
+For reusable cleanup policies, the plugin resolves the latest sandbox by querying agent-compose runs with the Dify `conversation_id` label. It does not use Dify session storage. The current Dify workflow runtime may omit `message_id`; when present, the plugin still records it as a run label.
+
 See [configuration and usage](docs/usage.md) and the [architecture introduction](docs/architecture.zh-CN.md). This project is licensed under Apache-2.0; see the repository-level license.
-
-## File uploads
-
-Both integrations accept optional files and upload them to a configured agent-compose workspace under a conversation-scoped inputs directory. Configure workspace_id when agent metadata does not provide it.

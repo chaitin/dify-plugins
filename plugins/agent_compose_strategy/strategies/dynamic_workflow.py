@@ -1,14 +1,10 @@
 import json
-import os
-import re
 import time
-import uuid
 from collections.abc import Generator
 from typing import Any
 
 from dify_plugin.entities.agent import AgentInvokeMessage
 from dify_plugin.entities.tool import ToolInvokeMessage
-from dify_plugin.file.file import File
 from dify_plugin.interfaces.agent import AgentStrategy
 from pydantic import BaseModel
 
@@ -16,6 +12,7 @@ from client.agent_compose import (
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
+    cleanup_policy_reuses_sandbox,
     conversation_labels,
     resolve_agent_reference,
 )
@@ -27,8 +24,6 @@ class DynamicWorkflowParams(BaseModel):
     agent_compose_timeout_seconds: int | None = None
     agent: str
     query: str
-    files: list[File] | None = None
-    workspace_id: str | None = None
     instruction: str | None = None
     cleanup_policy: str = "stop_on_completion"
     output_schema_json: str | None = None
@@ -47,10 +42,17 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
                 }
             )
         )
-        file_paths = upload_files(client, params.workspace_id or "", params.files, self.session)
-        prompt = build_prompt(params.instruction, params.query, file_paths)
+        prompt = build_prompt(params.instruction, params.query)
         project_id, agent_name = resolve_agent_reference(client, params.agent)
+        labels = conversation_labels(self.session)
         sandbox_id = ""
+        if cleanup_policy_reuses_sandbox(params.cleanup_policy):
+            conversation_id = labels.get("conversation_id", "")
+            sandbox_id = client.latest_sandbox_id(
+                project_id=project_id,
+                agent_name=agent_name,
+                labels={"conversation_id": conversation_id} if conversation_id else {},
+            )
 
         started_at = time.perf_counter()
         run_log = self.create_log_message(
@@ -75,7 +77,7 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
                 cleanup_policy=params.cleanup_policy,
                 output_schema_json=params.output_schema_json or "",
                 client_request_id=params.client_request_id or "",
-                labels=conversation_labels(self.session),
+                labels=labels,
             )
         except AgentComposeError as exc:
             yield self.finish_log_message(
@@ -129,49 +131,10 @@ class DynamicWorkflowAgentStrategy(AgentStrategy):
             raise AgentComposeError(failure_reason)
 
 
-def build_prompt(instruction: str | None, query: str, file_paths: list[str] | None = None) -> str:
+def build_prompt(instruction: str | None, query: str) -> str:
     instruction = (instruction or "").strip()
     query = query.strip()
-    if not instruction and not file_paths:
+    if not instruction:
         return query
     payload = {"instruction": instruction, "query": query}
-    if file_paths:
-        payload["files"] = file_paths
     return json.dumps(payload, ensure_ascii=False)
-
-
-def upload_files(client, workspace_id: str, files, session) -> list[str]:
-    if not files:
-        return []
-    if not workspace_id:
-        raise AgentComposeError("workspace_id is required when files are provided")
-    request_id = (
-        re.sub(r"[^A-Za-z0-9_-]", "", str(getattr(session, "conversation_id", "") or ""))
-        or uuid.uuid4().hex
-    )
-    paths = []
-    total = 0
-    for index, item in enumerate(files):
-        data = item if isinstance(item, dict) else getattr(item, "__dict__", {})
-        name = (
-            os.path.basename(str(data.get("filename") or data.get("name") or f"file-{index}"))
-            or f"file-{index}"
-        )
-        content = data.get("content") or getattr(item, "blob", None)
-        if isinstance(content, str):
-            content = content.encode()
-        if not isinstance(content, (bytes, bytearray)):
-            raise AgentComposeError(f"unable to read uploaded file {name}")
-        if len(content) > 50 * 1024 * 1024 or total + len(content) > 100 * 1024 * 1024:
-            raise AgentComposeError("uploaded files exceed size limits")
-        total += len(content)
-        path = f"inputs/{request_id}/{index}-{name}"
-        client.upload_workspace_file(
-            workspace_id=workspace_id,
-            path=path,
-            content=bytes(content),
-            filename=name,
-            content_type=str(data.get("mime_type") or "application/octet-stream"),
-        )
-        paths.append(path)
-    return paths

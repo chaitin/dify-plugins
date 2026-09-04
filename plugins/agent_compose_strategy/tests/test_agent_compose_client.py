@@ -8,6 +8,7 @@ from tools.run_agent import RunAgentTool
 from client.agent_compose import (
     GET_PROJECT_PROCEDURE,
     LIST_PROJECTS_PROCEDURE,
+    LIST_RUNS_PROCEDURE,
     RUN_AGENT_PROCEDURE,
     AgentComposeClient,
     AgentComposeConfig,
@@ -42,6 +43,10 @@ def test_agent_strategy_does_not_expose_manual_sandbox_id() -> None:
 @responses.activate
 def test_agent_strategy_sends_conversation_labels_and_emits_distinct_outputs() -> None:
     base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + LIST_RUNS_PROCEDURE,
+        json={"runs": [{"sandboxId": "sandbox-existing"}]},
+    )
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -89,10 +94,11 @@ def test_agent_strategy_sends_conversation_labels_and_emits_distinct_outputs() -
         "error": "",
         "warnings": [],
     }
-    assert b'"sandboxId"' not in responses.calls[0].request.body
+    assert b'"labels": {"conversation_id": "conversation-1"}' in responses.calls[0].request.body
+    assert b'"sandboxId": "sandbox-existing"' in responses.calls[1].request.body
     assert (
         b'"labels": {"conversation_id": "conversation-1", "message_id": "message-1"}'
-        in responses.calls[0].request.body
+        in responses.calls[1].request.body
     )
 
 
@@ -500,6 +506,7 @@ def test_run_agent_raises_on_http_error() -> None:
 @responses.activate
 def test_run_agent_uses_tool_provider_credentials() -> None:
     base_url = "http://credential-agent-compose.test"
+    responses.post(base_url + LIST_RUNS_PROCEDURE, json={"runs": []})
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -531,7 +538,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
         )
     )
 
-    request = responses.calls[0].request
+    request = responses.calls[1].request
     assert request.headers["Authorization"] == "Bearer token"
     assert b'"clientRequestId": "dify-request-1"' in request.body
     variables = {

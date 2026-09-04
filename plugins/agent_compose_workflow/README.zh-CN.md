@@ -10,6 +10,4 @@
 
 详见[配置与使用](docs/usage.zh-CN.md)和[完整架构与选型介绍](docs/architecture.zh-CN.md)。插件支持动态选择 Agent、沙箱清理策略、结构化输出和幂等请求 ID，并返回文本及结构化运行信息。本项目采用 Apache-2.0 许可证，以仓库根目录许可证为准。
 
-## 文件上传
-
-两个集成都支持可选 files 参数，文件会上传到 agent-compose 工作区的会话隔离 inputs 目录。若智能体元数据未提供工作区 ID，请配置 workspace_id。
+对于可复用的清理策略，插件会使用 Dify `conversation_id` label 查询 agent-compose 最近一次运行并找回 sandbox，不依赖 Dify session storage。当前 Dify 工作流运行时可能不提供 `message_id`；若运行时提供，插件仍会把它记录为 run label。

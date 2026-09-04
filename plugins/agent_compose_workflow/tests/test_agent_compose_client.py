@@ -6,6 +6,7 @@ from dify_plugin.entities.tool import ToolRuntime
 from client.agent_compose import (
     GET_PROJECT_PROCEDURE,
     LIST_PROJECTS_PROCEDURE,
+    LIST_RUNS_PROCEDURE,
     RUN_AGENT_PROCEDURE,
     AgentComposeClient,
     AgentComposeConfig,
@@ -417,6 +418,7 @@ def test_run_agent_raises_on_http_error() -> None:
 @responses.activate
 def test_run_agent_uses_tool_provider_credentials() -> None:
     base_url = "http://credential-agent-compose.test"
+    responses.post(base_url + LIST_RUNS_PROCEDURE, json={"runs": []})
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -448,7 +450,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
         )
     )
 
-    request = responses.calls[0].request
+    request = responses.calls[1].request
     assert request.headers["Authorization"] == "Bearer token"
     assert b'"clientRequestId": "dify-request-1"' in request.body
     variables = {
@@ -468,6 +470,10 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
 @responses.activate
 def test_run_agent_tool_sends_conversation_labels() -> None:
     base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + LIST_RUNS_PROCEDURE,
+        json={"runs": [{"sandboxId": "sandbox-1"}]},
+    )
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -502,8 +508,11 @@ def test_run_agent_tool_sends_conversation_labels() -> None:
         )
     )
 
-    request_body = responses.calls[0].request.body
-    assert b'"sandboxId"' not in request_body
+    lookup_body = responses.calls[0].request.body
+    assert b'"labels": {"conversation_id": "conversation-1"}' in lookup_body
+    assert b'"message_id"' not in lookup_body
+    request_body = responses.calls[1].request.body
+    assert b'"sandboxId": "sandbox-1"' in request_body
     assert (
         b'"labels": {"conversation_id": "conversation-1", "message_id": "message-1"}'
         in request_body
