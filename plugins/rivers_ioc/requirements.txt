@@ -11,23 +11,23 @@ certifi==2026.7.22
     #   httpcore
     #   httpx
     #   requests
-cffi==2.1.0 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
+cffi==2.1.1 ; platform_python_implementation == 'CPython' and sys_platform == 'win32'
     # via gevent
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
     # via requests
-click==8.4.2
+click==8.5.0
     # via flask
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-dify-plugin==0.10.0
+dify-plugin==0.10.2
     # via rivers-ioc-development
 dpkt==1.9.8
     # via dify-plugin
 flask==3.1.3
     # via dify-plugin
-gevent==26.7.0
+gevent==26.8.0
     # via dify-plugin
-greenlet==3.5.4 ; platform_python_implementation == 'CPython'
+greenlet==3.5.5 ; platform_python_implementation == 'CPython'
     # via gevent
 h11==0.16.0
     # via httpcore
@@ -37,7 +37,7 @@ httpx==0.28.1
     # via
     #   dify-plugin
     #   rivers-ioc-development
-idna==3.18
+idna==3.19
     # via
     #   anyio
     #   httpx
@@ -54,25 +54,25 @@ markupsafe==3.0.3
     #   werkzeug
 multidict==6.7.1
     # via yarl
-packaging==26.2
+packaging==26.3
     # via dify-plugin
 propcache==0.5.2
     # via yarl
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation == 'CPython' and sys_platform == 'win32'
     # via cffi
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   dify-plugin
     #   pydantic-settings
-pydantic-core==2.46.4
+pydantic-core==2.48.0
     # via pydantic
-pydantic-settings==2.14.2
+pydantic-settings==2.15.0
     # via dify-plugin
-python-dotenv==1.2.2
+python-dotenv==1.2.3
     # via pydantic-settings
 pyyaml==6.0.3
     # via dify-plugin
-regex==2026.7.19
+regex==2026.9.3
     # via tiktoken
 requests==2.34.2
     # via
@@ -80,7 +80,7 @@ requests==2.34.2
     #   tiktoken
 socksio==1.0.0
     # via dify-plugin
-tiktoken==0.13.0
+tiktoken==0.14.0
     # via dify-plugin
 typing-extensions==4.16.0
     # via
@@ -88,7 +88,7 @@ typing-extensions==4.16.0
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.2
+typing-inspection==0.4.4
     # via
     #   pydantic
     #   pydantic-settings
@@ -102,5 +102,5 @@ yarl==1.24.5
     # via dify-plugin
 zope-event==6.2
     # via gevent
-zope-interface==8.5
+zope-interface==8.6
     # via gevent
