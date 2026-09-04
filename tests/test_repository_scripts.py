@@ -7,7 +7,7 @@ import yaml
 
 from scripts.build_release import build_release, validate_version
 from scripts.discover_plugins import discover
-from scripts.validate_plugins import scan_private_references
+from scripts.validate_plugins import scan_private_references, validate_plugin
 from scripts.validate_runtime_requirements import dependency_lines
 
 
@@ -32,11 +32,59 @@ def test_private_reference_scan_allows_localhost(tmp_path: Path) -> None:
     assert scan_private_references(tmp_path) == []
 
 
+def test_plugin_validation_requires_tool_parameter_human_description(tmp_path: Path) -> None:
+    plugin = tmp_path / "plugins" / "demo"
+    (plugin / "provider").mkdir(parents=True)
+    (plugin / "tools").mkdir()
+    for filename in (
+        "main.py",
+        "requirements.txt",
+        "PRIVACY.md",
+        "Taskfile.yml",
+        "README.md",
+        "CHANGELOG.md",
+    ):
+        (plugin / filename).touch()
+    (plugin / "_assets").mkdir()
+    (plugin / "_assets" / "icon.svg").touch()
+    (plugin / "manifest.yaml").write_text(
+        "name: demo\nauthor: chaitin\nversion: 1.0.0\n"
+        "meta: {version: 1.0.0, minimum_dify_version: 1.15.0}\n"
+        "plugins: {tools: [provider/demo.yaml]}\n",
+        encoding="utf-8",
+    )
+    (plugin / "provider" / "demo.yaml").write_text("tools: [tools/demo.yaml]\n", encoding="utf-8")
+    (plugin / "tools" / "demo.yaml").write_text(
+        "parameters:\n  - {name: query, type: string, form: llm}\n", encoding="utf-8"
+    )
+
+    assert validate_plugin(tmp_path, {"name": "demo", "path": "plugins/demo"}) == [
+        "demo: tool tools/demo.yaml parameter query missing human_description"
+    ]
+
+
 def test_agent_compose_clients_do_not_drift() -> None:
     root = Path(__file__).resolve().parents[1]
     workflow = root / "plugins/agent_compose_workflow/client/agent_compose.py"
     strategy = root / "plugins/agent_compose_strategy/client/agent_compose.py"
     assert workflow.read_bytes() == strategy.read_bytes()
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "plugins/agent_compose_strategy/strategies/dynamic_workflow.yaml",
+        "plugins/agent_compose_workflow/tools/run_agent.yaml",
+    ],
+)
+def test_agent_compose_query_uses_string_type(declaration: str) -> None:
+    root = Path(__file__).resolve().parents[1]
+    definition = yaml.safe_load((root / declaration).read_text(encoding="utf-8"))
+    query = next(
+        parameter for parameter in definition["parameters"] if parameter["name"] == "query"
+    )
+
+    assert query["type"] == "string"
 
 
 def test_release_build_uses_version_without_modifying_sources(tmp_path: Path) -> None:

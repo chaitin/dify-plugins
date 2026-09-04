@@ -1,4 +1,3 @@
-import hashlib
 import json
 import os
 import uuid
@@ -8,12 +7,11 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import requests
-from dify_plugin.invocations.storage import StorageInvocationError
 
 GET_PROJECT_PROCEDURE = "/agentcompose.v2.ProjectService/GetProject"
 LIST_PROJECTS_PROCEDURE = "/agentcompose.v2.ProjectService/ListProjects"
 RUN_AGENT_PROCEDURE = "/agentcompose.v2.RunService/RunAgent"
-WORKSPACE_UPLOAD_PATH = "/api/agent-compose/workspaces/{workspace_id}/upload"
+LIST_RUNS_PROCEDURE = "/agentcompose.v2.RunService/ListRuns"
 MAX_TIMEOUT_SECONDS = 3600
 
 
@@ -131,7 +129,6 @@ class AgentComposeAgent:
     driver: str = ""
     display_name: str = ""
     description: str = ""
-    workspace_id: str = ""
 
     def selection_value(self) -> str:
         return json.dumps(
@@ -139,7 +136,6 @@ class AgentComposeAgent:
                 "project_id": self.project_id,
                 "project_name": self.project_name,
                 "agent_name": self.agent_name,
-                "workspace_id": self.workspace_id,
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -194,9 +190,6 @@ class AgentComposeClient:
                             agent.get("displayName") or agent.get("display_name") or ""
                         ).strip(),
                         description=str(agent.get("description") or "").strip(),
-                        workspace_id=str(
-                            agent.get("workspaceId") or agent.get("workspace_id") or ""
-                        ).strip(),
                     )
                 )
         return agents
@@ -211,6 +204,7 @@ class AgentComposeClient:
         cleanup_policy: str = "stop_on_completion",
         output_schema_json: str = "",
         client_request_id: str = "",
+        labels: Mapping[str, str] | None = None,
     ) -> RunAgentResult:
         if not project_id.strip():
             raise AgentComposeError("project_id is required")
@@ -228,40 +222,34 @@ class AgentComposeClient:
             "cleanupPolicy": cleanup_policy_to_proto(cleanup_policy),
             "outputSchemaJson": output_schema_json.strip(),
             "clientRequestId": client_request_id.strip() or f"dify-agent-compose-{uuid.uuid4()}",
+            "labels": dict(labels or {}),
         }
-        payload = {key: value for key, value in payload.items() if value not in {"", None}}
+        payload = {
+            key: value for key, value in payload.items() if value != "" and value is not None
+        }
 
         body = self._post_json(RUN_AGENT_PROCEDURE, payload)
         return parse_run_agent_response(body)
 
-    def upload_workspace_file(
-        self,
-        *,
-        workspace_id: str,
-        path: str,
-        content: bytes,
-        filename: str,
-        content_type: str = "application/octet-stream",
-    ) -> None:
-        if not workspace_id.strip():
-            raise AgentComposeError("selected agent has no file workspace configured")
-        url = self.config.normalized_base_url() + WORKSPACE_UPLOAD_PATH.format(
-            workspace_id=workspace_id.strip()
+    def latest_sandbox_id(
+        self, *, project_id: str, agent_name: str, labels: Mapping[str, str]
+    ) -> str:
+        if not labels:
+            return ""
+        body = self._post_json(
+            LIST_RUNS_PROCEDURE,
+            {
+                "projectId": project_id.strip(),
+                "agentName": agent_name.strip(),
+                "labels": dict(labels),
+                "offset": 0,
+                "limit": 1,
+            },
         )
-        headers = {"Accept": "application/json"}
-        if self.config.bearer_token:
-            headers["Authorization"] = f"Bearer {self.config.bearer_token}"
-        try:
-            response = requests.post(
-                url,
-                headers=headers,
-                data={"path": path, "upload_type": "file"},
-                files={"file": (filename, content, content_type)},
-                timeout=self.config.timeout_seconds,
-            )
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            raise AgentComposeError(f"agent-compose workspace upload failed: {exc}") from exc
+        runs = body.get("runs") or []
+        if not isinstance(runs, list) or not runs or not isinstance(runs[0], dict):
+            return ""
+        return str(runs[0].get("sandboxId") or runs[0].get("sandbox_id") or "").strip()
 
     def validate_connection(self) -> None:
         """Validate URL, authentication, and the frozen v2 Project API."""
@@ -421,94 +409,13 @@ def resolve_agent_reference(client: AgentComposeClient, value: str) -> tuple[str
     raise AgentComposeError(f"agent-compose agent {agent_name!r} is ambiguous. Use project/agent.")
 
 
-def resolve_agent_compose_sandbox_id(
-    *,
-    explicit_sandbox_id: str | None,
-    dify_session: Any,
-    project_id: str,
-    agent_name: str,
-) -> str:
-    explicit_sandbox_id = (explicit_sandbox_id or "").strip()
-    if explicit_sandbox_id:
-        return explicit_sandbox_id
-
-    key = agent_compose_sandbox_storage_key(
-        dify_session=dify_session,
-        project_id=project_id,
-        agent_name=agent_name,
-    )
-    if not key:
-        return ""
-    try:
-        if not dify_session.storage.exist(key):
-            return ""
-        return dify_session.storage.get(key).decode("utf-8").strip()
-    except (StorageInvocationError, UnicodeDecodeError):
-        return ""
-
-
-def remember_agent_compose_sandbox_id(
-    *,
-    explicit_sandbox_id: str | None,
-    dify_session: Any,
-    project_id: str,
-    agent_name: str,
-    agent_compose_sandbox_id: str,
-) -> None:
-    if (explicit_sandbox_id or "").strip():
-        return
-    agent_compose_sandbox_id = agent_compose_sandbox_id.strip()
-    if not agent_compose_sandbox_id:
-        return
-    key = agent_compose_sandbox_storage_key(
-        dify_session=dify_session,
-        project_id=project_id,
-        agent_name=agent_name,
-    )
-    if not key:
-        return
-    try:
-        dify_session.storage.set(key, agent_compose_sandbox_id.encode("utf-8"))
-    except StorageInvocationError:
-        return
-
-
-def forget_agent_compose_sandbox_id(
-    *,
-    dify_session: Any,
-    project_id: str,
-    agent_name: str,
-) -> None:
-    key = agent_compose_sandbox_storage_key(
-        dify_session=dify_session,
-        project_id=project_id,
-        agent_name=agent_name,
-    )
-    if not key:
-        return
-    try:
-        if not dify_session.storage.exist(key):
-            return
-        dify_session.storage.delete(key)
-    except StorageInvocationError:
-        return
-
-
-def agent_compose_sandbox_storage_key(
-    *,
-    dify_session: Any,
-    project_id: str,
-    agent_name: str,
-) -> str:
-    conversation_id = str(getattr(dify_session, "conversation_id", "") or "").strip()
-    if not conversation_id:
-        return ""
-
-    # Scope by agent to avoid reusing a sandbox created by another agent in the
-    # same Dify conversation.
-    namespace = f"{conversation_id}|{project_id.strip()}|{agent_name.strip()}"
-    digest = hashlib.sha256(namespace.encode("utf-8")).hexdigest()[:32]
-    return f"agent_compose_sandbox_{digest}"
+def conversation_labels(session: Any) -> dict[str, str]:
+    labels = {}
+    for key in ("conversation_id", "message_id"):
+        value = str(getattr(session, key, "") or "").strip()
+        if value:
+            labels[key] = value
+    return labels
 
 
 def parse_run_agent_response(body: dict[str, Any]) -> RunAgentResult:

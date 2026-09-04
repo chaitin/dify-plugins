@@ -56,6 +56,26 @@ def validate_plugin(root: Path, item: dict[str, str]) -> list[str]:
         errors.append(f"{item['name']}: version and meta.version must match")
     if not (path / "_assets" / "icon.svg").is_file():
         errors.append(f"{item['name']}: missing _assets/icon.svg")
+    for provider_name in (manifest.get("plugins") or {}).get("tools") or []:
+        provider_path = path / provider_name
+        try:
+            provider = yaml.safe_load(provider_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError) as exc:
+            errors.append(f"{item['name']}: invalid tool provider {provider_name}: {exc}")
+            continue
+        for tool_name in provider.get("tools") or []:
+            tool_path = path / tool_name
+            try:
+                tool = yaml.safe_load(tool_path.read_text(encoding="utf-8")) or {}
+            except (OSError, yaml.YAMLError) as exc:
+                errors.append(f"{item['name']}: invalid tool {tool_name}: {exc}")
+                continue
+            for parameter in tool.get("parameters") or []:
+                if not parameter.get("human_description"):
+                    errors.append(
+                        f"{item['name']}: tool {tool_name} parameter "
+                        f"{parameter.get('name', '<unknown>')} missing human_description"
+                    )
     return errors
 
 

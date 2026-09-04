@@ -32,24 +32,6 @@ parameters:
       en_US: User query passed to the selected agent.
       zh_Hans: 传递给所选智能体的用户查询。
     llm_description: User query passed to the selected agent.
-  - name: files
-    type: files
-    form: llm
-    required: false
-    label:
-      en_US: Files
-      zh_Hans: 文件
-    human_description:
-      en_US: Optional files uploaded to the selected agent workspace.
-      zh_Hans: 上传到所选智能体工作区的可选文件。
-    llm_description: Files for the agent to inspect.
-  - name: workspace_id
-    type: string
-    form: form
-    required: false
-    label:
-      en_US: Workspace ID
-      zh_Hans: 工作区 ID
   - name: instruction
     type: string
     form: form

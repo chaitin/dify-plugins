@@ -1,5 +1,9 @@
 # agent-compose Strategy
 
+Requires agent-compose release v2609.1.0 or later (run labels are used for conversation continuity).
+
+Reusable runs are resolved from the Dify `conversation_id` run label and do not require Dify session storage. Dify may omit `message_id` for workflow invocations; the plugin records it whenever it is available.
+
 [中文文档](README.zh-CN.md)
 
 A Dify Agent Strategy plugin that delegates Agent node execution to [agent-compose](https://github.com/chaitin/agent-compose), including isolated sandbox lifecycle management and structured run metadata.
@@ -21,7 +25,3 @@ Install the versioned `.difypkg`, select **agent-compose Strategy** in an Agent 
 With `keep_running`, the strategy remembers an agent-scoped sandbox for the Dify conversation and can reuse it on later turns. Stop and remove policies avoid retaining sandbox state. Every invocation emits text, JSON, and separate structured run variables.
 
 See [configuration and usage](docs/usage.md) and the [architecture introduction](docs/architecture.zh-CN.md). This project is licensed under Apache-2.0; see the repository-level license.
-
-## File uploads
-
-Configure workspace_id to enable uploaded files.

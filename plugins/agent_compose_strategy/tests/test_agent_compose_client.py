@@ -3,22 +3,19 @@ import responses
 from dify_plugin.core.runtime import Session
 from dify_plugin.entities.agent import AgentRuntime
 from dify_plugin.entities.tool import ToolRuntime
-from dify_plugin.invocations.storage import StorageInvocationError
 from tools.run_agent import RunAgentTool
 
 from client.agent_compose import (
     GET_PROJECT_PROCEDURE,
     LIST_PROJECTS_PROCEDURE,
+    LIST_RUNS_PROCEDURE,
     RUN_AGENT_PROCEDURE,
     AgentComposeClient,
     AgentComposeConfig,
     AgentComposeError,
-    agent_compose_sandbox_storage_key,
     cleanup_policy_to_proto,
-    forget_agent_compose_sandbox_id,
+    conversation_labels,
     parse_agent_selection,
-    remember_agent_compose_sandbox_id,
-    resolve_agent_compose_sandbox_id,
     resolve_agent_reference,
 )
 from strategies.dynamic_workflow import DynamicWorkflowAgentStrategy, DynamicWorkflowParams
@@ -44,8 +41,12 @@ def test_agent_strategy_does_not_expose_manual_sandbox_id() -> None:
 
 
 @responses.activate
-def test_agent_strategy_stop_mode_remembers_sandbox_and_emits_distinct_outputs() -> None:
+def test_agent_strategy_sends_conversation_labels_and_emits_distinct_outputs() -> None:
     base_url = "http://agent-compose.test"
+    responses.post(
+        base_url + LIST_RUNS_PROCEDURE,
+        json={"runs": [{"sandboxId": "sandbox-existing"}]},
+    )
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -61,7 +62,7 @@ def test_agent_strategy_stop_mode_remembers_sandbox_and_emits_distinct_outputs()
     )
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
+    session.message_id = "message-1"
     strategy = DynamicWorkflowAgentStrategy(
         runtime=AgentRuntime(user_id="user-1"),
         session=session,
@@ -93,108 +94,12 @@ def test_agent_strategy_stop_mode_remembers_sandbox_and_emits_distinct_outputs()
         "error": "",
         "warnings": [],
     }
-    assert b'"sandboxId"' not in responses.calls[0].request.body
-    assert list(session.storage.values.values()) == [b"sandbox-1"]
-
-
-@responses.activate
-def test_agent_strategy_remove_mode_clears_stored_sandbox() -> None:
-    base_url = "http://agent-compose.test"
-    responses.post(
-        base_url + RUN_AGENT_PROCEDURE,
-        json={
-            "run": {
-                "summary": {
-                    "runId": "run-1",
-                    "status": "RUN_STATUS_SUCCEEDED",
-                },
-                "output": "done",
-            }
-        },
+    assert b'"labels": {"conversation_id": "conversation-1"}' in responses.calls[0].request.body
+    assert b'"sandboxId": "sandbox-existing"' in responses.calls[1].request.body
+    assert (
+        b'"labels": {"conversation_id": "conversation-1", "message_id": "message-1"}'
+        in responses.calls[1].request.body
     )
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
-    remember_agent_compose_sandbox_id(
-        explicit_sandbox_id=None,
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-        agent_compose_sandbox_id="old-sandbox",
-    )
-    strategy = DynamicWorkflowAgentStrategy(
-        runtime=AgentRuntime(user_id="user-1"),
-        session=session,
-    )
-
-    list(
-        strategy._invoke(
-            {
-                "agent_compose_url": base_url,
-                "agent": '{"project_id":"project-1","agent_name":"writer"}',
-                "query": "hello",
-                "cleanup_policy": "remove_on_completion",
-            }
-        )
-    )
-
-    assert b'"sandboxId"' not in responses.calls[0].request.body
-    key = agent_compose_sandbox_storage_key(
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    assert key not in session.storage.values
-
-
-@responses.activate
-def test_agent_strategy_clears_mapping_when_reused_run_returns_no_sandbox() -> None:
-    base_url = "http://agent-compose.test"
-    responses.post(
-        base_url + RUN_AGENT_PROCEDURE,
-        json={
-            "run": {
-                "summary": {
-                    "runId": "run-1",
-                    "status": "RUN_STATUS_SUCCEEDED",
-                },
-                "output": "done",
-            }
-        },
-    )
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
-    remember_agent_compose_sandbox_id(
-        explicit_sandbox_id=None,
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-        agent_compose_sandbox_id="old-sandbox",
-    )
-    strategy = DynamicWorkflowAgentStrategy(
-        runtime=AgentRuntime(user_id="user-1"),
-        session=session,
-    )
-
-    list(
-        strategy._invoke(
-            {
-                "agent_compose_url": base_url,
-                "agent": '{"project_id":"project-1","agent_name":"writer"}',
-                "query": "hello",
-                "cleanup_policy": "stop_on_completion",
-            }
-        )
-    )
-
-    assert b'"sandboxId": "old-sandbox"' in responses.calls[0].request.body
-    key = agent_compose_sandbox_storage_key(
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    assert key not in session.storage.values
 
 
 def test_agent_strategy_accepts_connection_settings() -> None:
@@ -490,197 +395,11 @@ def test_resolve_agent_reference_rejects_ambiguous_agent_name() -> None:
         resolve_agent_reference(client, "writer")
 
 
-def test_resolve_agent_compose_sandbox_id_prefers_explicit_value() -> None:
+def test_conversation_labels_omits_empty_values() -> None:
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
 
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id="manual-sandbox",
-            dify_session=session,
-            project_id="project-1",
-            agent_name="writer",
-        )
-        == "manual-sandbox"
-    )
-
-
-class FakeStorage:
-    def __init__(self) -> None:
-        self.values: dict[str, bytes] = {}
-
-    def get(self, key: str) -> bytes:
-        return self.values[key]
-
-    def exist(self, key: str) -> bool:
-        return key in self.values
-
-    def set(self, key: str, val: bytes) -> None:
-        self.values[key] = val
-
-    def delete(self, key: str) -> None:
-        del self.values[key]
-
-
-class FailingStorage:
-    def __init__(self, error: Exception) -> None:
-        self.error = error
-
-    def get(self, key: str) -> bytes:
-        raise self.error
-
-    def exist(self, key: str) -> bool:
-        raise self.error
-
-    def set(self, key: str, val: bytes) -> None:
-        raise self.error
-
-    def delete(self, key: str) -> None:
-        raise self.error
-
-
-def test_sandbox_storage_sdk_errors_degrade_to_empty_state() -> None:
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(StorageInvocationError("storage unavailable"))
-
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id=None,
-            dify_session=session,
-            project_id="project-1",
-            agent_name="writer",
-        )
-        == ""
-    )
-    remember_agent_compose_sandbox_id(
-        explicit_sandbox_id=None,
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-        agent_compose_sandbox_id="sandbox-1",
-    )
-    forget_agent_compose_sandbox_id(
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-
-
-def test_sandbox_storage_does_not_hide_unexpected_errors() -> None:
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FailingStorage(ValueError("programming error"))
-
-    with pytest.raises(ValueError, match="programming error"):
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id=None,
-            dify_session=session,
-            project_id="project-1",
-            agent_name="writer",
-        )
-
-
-def test_resolve_agent_compose_sandbox_id_reads_stored_agent_scoped_value() -> None:
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
-
-    remember_agent_compose_sandbox_id(
-        explicit_sandbox_id="",
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-        agent_compose_sandbox_id="agent-compose-sandbox-writer",
-    )
-    remember_agent_compose_sandbox_id(
-        explicit_sandbox_id="",
-        dify_session=session,
-        project_id="project-1",
-        agent_name="reader",
-        agent_compose_sandbox_id="agent-compose-sandbox-reader",
-    )
-
-    first = resolve_agent_compose_sandbox_id(
-        explicit_sandbox_id="",
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    second = resolve_agent_compose_sandbox_id(
-        explicit_sandbox_id=None,
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    other_agent = resolve_agent_compose_sandbox_id(
-        explicit_sandbox_id="",
-        dify_session=session,
-        project_id="project-1",
-        agent_name="reader",
-    )
-
-    assert first == "agent-compose-sandbox-writer"
-    assert first == second
-    assert other_agent == "agent-compose-sandbox-reader"
-
-    forget_agent_compose_sandbox_id(
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    writer_key = agent_compose_sandbox_storage_key(
-        dify_session=session,
-        project_id="project-1",
-        agent_name="writer",
-    )
-    assert writer_key not in session.storage.values
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id=None,
-            dify_session=session,
-            project_id="project-1",
-            agent_name="writer",
-        )
-        == ""
-    )
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id=None,
-            dify_session=session,
-            project_id="project-1",
-            agent_name="reader",
-        )
-        == "agent-compose-sandbox-reader"
-    )
-
-
-def test_resolve_agent_compose_sandbox_id_returns_empty_for_missing_key() -> None:
-    session = Session.empty_session()
-    session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
-
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id=None,
-            dify_session=session,
-            project_id="project-1",
-            agent_name="writer",
-        )
-        == ""
-    )
-
-
-def test_resolve_agent_compose_sandbox_id_returns_empty_without_conversation() -> None:
-    assert (
-        resolve_agent_compose_sandbox_id(
-            explicit_sandbox_id="",
-            dify_session=Session.empty_session(),
-            project_id="project-1",
-            agent_name="writer",
-        )
-        == ""
-    )
+    assert conversation_labels(session) == {"conversation_id": "conversation-1"}
 
 
 @responses.activate
@@ -787,6 +506,7 @@ def test_run_agent_raises_on_http_error() -> None:
 @responses.activate
 def test_run_agent_uses_tool_provider_credentials() -> None:
     base_url = "http://credential-agent-compose.test"
+    responses.post(base_url + LIST_RUNS_PROCEDURE, json={"runs": []})
     responses.post(
         base_url + RUN_AGENT_PROCEDURE,
         json={
@@ -798,7 +518,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
     )
     session = Session.empty_session()
     session.conversation_id = "conversation-1"
-    session.storage = FakeStorage()
+    session.message_id = "message-1"
     tool = RunAgentTool(
         runtime=ToolRuntime(
             credentials={"agent_compose_url": base_url, "agent_compose_token": "token"},
@@ -818,7 +538,7 @@ def test_run_agent_uses_tool_provider_credentials() -> None:
         )
     )
 
-    request = responses.calls[0].request
+    request = responses.calls[1].request
     assert request.headers["Authorization"] == "Bearer token"
     assert b'"clientRequestId": "dify-request-1"' in request.body
     variables = {
