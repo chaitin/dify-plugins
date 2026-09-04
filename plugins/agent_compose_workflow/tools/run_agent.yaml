@@ -50,6 +50,10 @@ parameters:
     label:
       en_US: Workspace ID
       zh_Hans: 工作区 ID
+    human_description:
+      en_US: Optional workspace override when the selected agent does not provide one.
+      zh_Hans: 当所选智能体未提供工作区时，可在此指定工作区 ID。
+    llm_description: Optional agent-compose workspace ID override.
   - name: instruction
     type: string
     form: form
