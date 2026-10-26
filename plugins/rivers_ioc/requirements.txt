@@ -52,7 +52,7 @@ markupsafe==3.0.3
     #   flask
     #   jinja2
     #   werkzeug
-multidict==6.7.1
+multidict==6.9.1
     # via yarl
 packaging==26.2
     # via dify-plugin
